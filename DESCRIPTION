@@ -1,0 +1,31 @@
+Package: complex
+Type: Package
+Title: Time Series Analysis and Forecasting Using Complex Variables
+Version: 0.0.1.41001
+Date: 2019-07-01
+Authors@R: person("Ivan", "Svetunkov", email = "ivan@svetunkov.ru", role = c("aut", "cre"),
+                  comment="Lecturer at Centre for Marketing Analytics and Forecasting, Lancaster University, UK")
+URL: https://github.com/config-i1/Complex
+BugReports: https://github.com/config-i1/Complex/issues
+Language: en-GB
+Description: Set of function implementing the instruments for complex-valued modelling,
+             including time series analysis and forecasting.
+License: GPL (>=2)
+Depends:
+    R (>= 3.0.2),
+    greybox (>= 0.5.0)
+Imports:
+    stats,
+    graphics,
+    nloptr,
+    mvtnorm,
+    utils,
+    zoo
+Suggests:
+    smooth (>= 2.5.0),
+    testthat,
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
+RoxygenNote: 6.1.1
+Encoding: UTF-8
