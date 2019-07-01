@@ -70,10 +70,10 @@ vignette: \code{vignette("CAR","Complex")}
 }
 \examples{
 
-Y <- ts(cbind(rnorm(100,100,10),rnorm(100,75,8)),frequency=12)
+Y <- ts(cbind(rnorm(100,100,10),rnorm(100,75,8)),frequency=4)
 
 # The simplest model applied to the data with the default values
-# CAR(Y,h=10,holdout=TRUE)
+CAR(Y,h=10,holdout=TRUE)
 
 
 }

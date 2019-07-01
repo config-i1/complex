@@ -57,22 +57,23 @@
 #'
 #' @examples
 #'
-#' Y <- ts(cbind(rnorm(100,100,10),rnorm(100,75,8)),frequency=12)
+#' Y <- ts(cbind(rnorm(100,100,10),rnorm(100,75,8)),frequency=4)
 #'
 #' # The simplest model applied to the data with the default values
-#' # CAR(Y,h=10,holdout=TRUE)
+#' CAR(Y,h=10,holdout=TRUE)
 #'
 #'
 #' @importFrom mvtnorm dmvnorm
 #' @importFrom nloptr nloptr
 #' @importFrom greybox AICc BICc measures
 #' @importFrom graphics abline lines par plot points
-#' @importFrom stats AIC BIC deltat frequency start time ts
+#' @importFrom stats AIC BIC deltat frequency start time ts fitted
+#' @import smooth
 #'
 #' @export
 CAR <- function(y, order=NULL, h=13, holdout=TRUE, silent=TRUE,
                 ic=c("AIC","AICc","BIC","BICc"), restrict=TRUE){
-    # The function fitts the restricted VAR, which corresponds to CAR. The likelihood is multivariate normal.
+    # The function fits the restricted VAR, which corresponds to CAR. The likelihood is multivariate normal.
     # restrict defines whether the CAR models is constructed or a basic VAR
 
     # Start measuring the time of calculations
@@ -111,19 +112,40 @@ CAR <- function(y, order=NULL, h=13, holdout=TRUE, silent=TRUE,
     ##### If order needs to be selected #####
     if(is.null(order)){
         CARmodels <- vector("list",dataFreq);
+        if(!silent){
+            cat("Estimation progress:    ");
+        }
+
         for(i in 1:dataFreq){
+            if(!silent){
+                if(i==1){
+                    cat("\b");
+                }
+                cat(paste0(rep("\b",nchar(round((i-1)/dataFreq,2)*100)+1),collapse=""));
+                cat(paste0(round(i/dataFreq,2)*100,"%"));
+            }
             CARmodels[[i]] <- CAR(y=y, order=i, h=h, holdout=holdout, restrict=TRUE);
         }
+
+        if(!silent){
+            cat("... Done! \n");
+        }
+
         CARICs <- sapply(CARmodels,IC);
-        names(CARICs) <- paste0("VAR(",c(1:dataFreq),")");
+        names(CARICs) <- paste0("CAR(",c(1:dataFreq),")");
         i <- which.min(CARICs);
         CARmodels[[i]]$ICsAll <- CARICs;
-        return(CARmodels[[i]]);
+
+        yFitted <- fitted(CARmodels[[i]]);
+        yForecast <- CARmodels[[i]]$forecast;
+
+        model <- CARmodels[[i]];
+        modelname <- model$model;
     }
     ##### If a specific order is provided #####
     else{
         # A is the matrix of 2 x order with the last row for the
-        VARFitter <- function(A, yInSample, order){
+        CARFitter <- function(A, yInSample, order){
             yFitted[] <- 0;
             for(i in (order+1):obsInSample){
                 for(j in 1:order){
@@ -137,7 +159,7 @@ CAR <- function(y, order=NULL, h=13, holdout=TRUE, silent=TRUE,
             return(yFitted);
         }
 
-        VARCF <- function(A, yInSample, order){
+        CARCF <- function(A, yInSample, order){
             if(restrict){
                 A <- matrix(A,nrow=nSeries);
                 B <- matrix(0, nSeries, order*nSeries);
@@ -150,14 +172,14 @@ CAR <- function(y, order=NULL, h=13, holdout=TRUE, silent=TRUE,
             else{
                 A <- matrix(A,nrow=nSeries);
             }
-            yFitted[] <- VARFitter(A,yInSample,order);
+            yFitted[] <- CARFitter(A,yInSample,order);
             sigma <- t(yInSample - yFitted) %*% (yInSample - yFitted);
             logLikReturned <- sum(dmvnorm(yInSample - yFitted, sigma=sigma, log=TRUE));
 
             return(-logLikReturned);
         }
 
-        VARForecaster <- function(A, yInSample, order){
+        CARForecaster <- function(A, yInSample, order){
             yBuffer <- matrix(0, h+order, nSeries);
             yBuffer[1:order,] <- yInSample[obsInSample-c(1:order)+1,]
             for(i in 1:h){
@@ -183,7 +205,7 @@ CAR <- function(y, order=NULL, h=13, holdout=TRUE, silent=TRUE,
         # Define constants
         A <- c(A, colMeans(yInSample));
 
-        res <- nloptr(A, VARCF,# lb=AList$ALower, ub=AList$AUpper,
+        res <- nloptr(A, CARCF,# lb=AList$ALower, ub=AList$AUpper,
                       opts=list("algorithm"="NLOPT_LN_BOBYQA", "xtol_rel"=1e-8, "maxeval"=1000, print_level=0),
                       yInSample=yInSample, order=order);
         A <- res$solution;
@@ -204,10 +226,10 @@ CAR <- function(y, order=NULL, h=13, holdout=TRUE, silent=TRUE,
         logLik <- -res$objective;
 
         #### Produce fitted and forecasts ####
-        yFitted[] <- VARFitter(A,yInSample,order);
+        yFitted[] <- CARFitter(A,yInSample,order);
         yFitted[1:order,] <- NA;
         errors[] <- yInSample - yFitted;
-        yForecast[] <- VARForecaster(A,yInSample,order);
+        yForecast[] <- CARForecaster(A,yInSample,order);
 
         yForecast <- ts(yForecast,start=time(y)[obsInSample] + dataDeltat,frequency=dataFreq);
         yFitted <- ts(yFitted,start=dataStart,frequency=dataFreq);
@@ -226,7 +248,7 @@ CAR <- function(y, order=NULL, h=13, holdout=TRUE, silent=TRUE,
                                                  c("nParamInternal","nParamXreg",
                                                    "nParamIntermittent","nParamAll")));
         # orders + constant + cov matrix
-        parametersNumber[1,4] <- parametersNumber[1,1] <- nSeries^{nSeries*(!restrict)}*order+2+3;
+        parametersNumber[1,4] <- parametersNumber[1,1] <- 2*order+2+3;
 
         modelname <- paste0("CAR(",order,")");
 
@@ -245,65 +267,65 @@ CAR <- function(y, order=NULL, h=13, holdout=TRUE, silent=TRUE,
             errorMeasures <- NA;
         }
 
-        #### Produce a graph if needed ####
-        if(!silent){
-            pages <- ceiling(nSeries / 5);
-            perPage <- ceiling(nSeries / pages);
-            packs <- seq(1, nSeries+1, perPage);
-            if(packs[length(packs)]<nSeries+1){
-                packs <- c(packs,nSeries+1);
-            }
-            parDefault <- par(no.readonly=TRUE);
-            for(j in 1:pages){
-                par(mar=c(4,4,2,1),mfcol=c(perPage,1));
-                for(i in packs[j]:(packs[j+1]-1)){
-                    # if(any(intervalType==c("u","i"))){
-                    #     plotRange <- range(min(y[,i],yForecast[,i],yFitted[,i],PI[,i*2-1]),
-                    #                        max(y[,i],yForecast[,i],yFitted[,i],PI[,i*2]));
-                    # }
-                    # else{
-                        plotRange <- range(min(y[,i],yForecast[,i],yFitted[,i]),
-                                           max(y[,i],yForecast[,i],yFitted[,i]));
-                    # }
-                    plot(y[,i],main=paste0(modelname," ",dataNames[i]),ylab="Y",
-                         ylim=plotRange, xlim=range(time(y[,i])[1],time(yForecast)[max(h,1)]),
-                         type="l");
-                    lines(yFitted[,i],col="purple",lwd=2,lty=2);
-                    if(h>1){
-                        # if(any(intervalType==c("u","i"))){
-                        #     lines(PI[,i*2-1],col="darkgrey",lwd=3,lty=2);
-                        #     lines(PI[,i*2],col="darkgrey",lwd=3,lty=2);
-                        #
-                        #     polygon(c(seq(dataDeltat*(yForecastStart[2]-1)+yForecastStart[1],
-                        #                   dataDeltat*(end(yForecast)[2]-1)+end(yForecast)[1],dataDeltat),
-                        #               rev(seq(dataDeltat*(yForecastStart[2]-1)+yForecastStart[1],
-                        #                       dataDeltat*(end(yForecast)[2]-1)+end(yForecast)[1],dataDeltat))),
-                        #             c(as.vector(PI[,i*2]), rev(as.vector(PI[,i*2-1]))), col="lightgray",
-                        #             border=NA, density=10);
-                        # }
-                        lines(yForecast[,i],col="blue",lwd=2);
-                    }
-                    else{
-                        # if(any(intervalType==c("u","i"))){
-                        #     points(PI[,i*2-1],col="darkgrey",lwd=3,pch=4);
-                        #     points(PI[,i*2],col="darkgrey",lwd=3,pch=4);
-                        # }
-                        points(yForecast[,i],col="blue",lwd=2,pch=4);
-                    }
-                    abline(v=dataDeltat*(yForecastStart[2]-2)+yForecastStart[1],col="red",lwd=2);
-                }
-            }
-            par(parDefault);
-        }
-
         model <- list(model=modelname, timeElapsed=Sys.time()-startTime,
                       y=yInSample, fitted=yFitted, coefficients=A, residuals=errors, forecast=yForecast,
-                      nParam=parametersNumber, logLik=logLik, holdout=yHoldout, PI=NA, loss="Likelihood",
+                      nParam=parametersNumber, logLik=logLik, holdout=yHoldout, PI=NA, loss="likelihood",
                       lossValue=-logLik, logLik=logLik, Sigma=1/obsInSample * sum(t(errors) %*% errors),
                       accuracy=errorMeasures);
         model <- structure(model,class=c("vsmooth","smooth"));
         model$ICs <- c(AIC(model),AICc(model),BIC(model),BICc(model));
         names(model$ICs) <- c("AIC","AICc","BIC","BICc");
+    }
+
+    #### Produce a graph if needed ####
+    if(!silent){
+        pages <- ceiling(nSeries / 5);
+        perPage <- ceiling(nSeries / pages);
+        packs <- seq(1, nSeries+1, perPage);
+        if(packs[length(packs)]<nSeries+1){
+            packs <- c(packs,nSeries+1);
+        }
+        parDefault <- par(no.readonly=TRUE);
+        for(j in 1:pages){
+            par(mar=c(4,4,2,1),mfcol=c(perPage,1));
+            for(i in packs[j]:(packs[j+1]-1)){
+                # if(any(intervalType==c("u","i"))){
+                #     plotRange <- range(min(y[,i],yForecast[,i],yFitted[,i],PI[,i*2-1]),
+                #                        max(y[,i],yForecast[,i],yFitted[,i],PI[,i*2]));
+                # }
+                # else{
+                plotRange <- range(min(y[,i],yForecast[,i],yFitted[,i],na.rm=TRUE),
+                                   max(y[,i],yForecast[,i],yFitted[,i],na.rm=TRUE));
+                # }
+                plot(y[,i],main=paste0(modelname," ",dataNames[i]),ylab="Y",
+                     ylim=plotRange, xlim=range(time(y[,i])[1],time(yForecast)[max(h,1)]),
+                     type="l");
+                lines(yFitted[,i],col="purple",lwd=2,lty=2);
+                if(h>1){
+                    # if(any(intervalType==c("u","i"))){
+                    #     lines(PI[,i*2-1],col="darkgrey",lwd=3,lty=2);
+                    #     lines(PI[,i*2],col="darkgrey",lwd=3,lty=2);
+                    #
+                    #     polygon(c(seq(dataDeltat*(yForecastStart[2]-1)+yForecastStart[1],
+                    #                   dataDeltat*(end(yForecast)[2]-1)+end(yForecast)[1],dataDeltat),
+                    #               rev(seq(dataDeltat*(yForecastStart[2]-1)+yForecastStart[1],
+                    #                       dataDeltat*(end(yForecast)[2]-1)+end(yForecast)[1],dataDeltat))),
+                    #             c(as.vector(PI[,i*2]), rev(as.vector(PI[,i*2-1]))), col="lightgray",
+                    #             border=NA, density=10);
+                    # }
+                    lines(yForecast[,i],col="blue",lwd=2);
+                }
+                else{
+                    # if(any(intervalType==c("u","i"))){
+                    #     points(PI[,i*2-1],col="darkgrey",lwd=3,pch=4);
+                    #     points(PI[,i*2],col="darkgrey",lwd=3,pch=4);
+                    # }
+                    points(yForecast[,i],col="blue",lwd=2,pch=4);
+                }
+                abline(v=dataDeltat*(yForecastStart[2]-2)+yForecastStart[1],col="red",lwd=2);
+            }
+        }
+        par(parDefault);
     }
     return(model);
 }
