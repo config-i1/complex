@@ -10,11 +10,11 @@
 #' @author Ivan Svetunkov, \email{ivan@svetunkov.ru}
 #' @keywords univar
 #'
-#' @param x Vector or matrix of complex variables. If it is matrix then the
+#' @param x vector or matrix of complex variables. If it is matrix then the
 #' variable \code{y} is ignored.
-#' @param y Second vector to calculate covariance or correlations with.
-#' @param V Complex covariance matrix.
-#' @param ... Parameters passed to \code{mean()} functions. For example, this can be
+#' @param y second vector to calculate covariance or correlations with.
+#' @param V complex covariance matrix.
+#' @param ... parameters passed to \code{mean()} functions. For example, this can be
 #' \code{na.rm=TRUE} to remove missing values or \code{trim} to define the trimming
 #' in the mean (see \link[stats]{mean}).
 #'
@@ -28,7 +28,7 @@
 #'
 #' @examples
 #'
-#' # Generat random complex variables
+#' # Generate random complex variables
 #' x <- complex(real=rnorm(100,10,10), imaginary=rnorm(100,10,10))
 #' y <- complex(real=rnorm(100,10,10), imaginary=rnorm(100,10,10))
 #'

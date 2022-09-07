@@ -16,16 +16,16 @@ ccor(x, y, ...)
 ccov2ccor(V)
 }
 \arguments{
-\item{x}{Vector or matrix of complex variables. If it is matrix then the
+\item{x}{vector or matrix of complex variables. If it is matrix then the
 variable \code{y} is ignored.}
 
-\item{...}{Parameters passed to \code{mean()} functions. For example, this can be
+\item{...}{parameters passed to \code{mean()} functions. For example, this can be
 \code{na.rm=TRUE} to remove missing values or \code{trim} to define the trimming
 in the mean (see \link[stats]{mean}).}
 
-\item{y}{Second vector to calculate covariance or correlations with.}
+\item{y}{second vector to calculate covariance or correlations with.}
 
-\item{V}{Complex covariance matrix.}
+\item{V}{complex covariance matrix.}
 }
 \value{
 A scalar or a matrix with resulting complex variables.
@@ -45,7 +45,7 @@ is ignored.
 }
 \examples{
 
-# Generat random complex variables
+# Generate random complex variables
 x <- complex(real=rnorm(100,10,10), imaginary=rnorm(100,10,10))
 y <- complex(real=rnorm(100,10,10), imaginary=rnorm(100,10,10))
 

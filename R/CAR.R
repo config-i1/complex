@@ -16,16 +16,16 @@
 #' @author Ivan Svetunkov, \email{ivan@svetunkov.ru}
 #' @keywords univar ts models regression
 #'
-#' @param y The pair of the time series (the matrix) in columns.
-#' @param order The order p of the model. If \code{NULL}, then it is selected
+#' @param y the pair of the time series (the matrix) in columns.
+#' @param order the order p of the model. If \code{NULL}, then it is selected
 #' automatically based on the selected information criterion.
-#' @param h Length of forecasting horizon.
-#' @param holdout If \code{TRUE}, holdout sample of size \code{h} is taken from
+#' @param h length of forecasting horizon.
+#' @param holdout if \code{TRUE}, holdout sample of size \code{h} is taken from
 #' the end of the data.
 #' nothing happens.
-#' @param silent If \code{TRUE}, then the plot is produced. Otherwise nothing happens.
-#' @param ic The information criterion used in the model selection procedure.
-#' @param restrict If \code{FALSE}, then VAR(p) is constructed instead of CAR(p).
+#' @param silent if \code{TRUE}, then the plot is produced. Otherwise nothing happens.
+#' @param ic the information criterion used in the model selection procedure.
+#' @param restrict if \code{FALSE}, then VAR(p) is constructed instead of CAR(p).
 #'
 #' @return Object of class "vsmooth" is returned. It contains the following list of
 #' values:

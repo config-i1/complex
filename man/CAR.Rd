@@ -15,22 +15,22 @@ CAR(
 )
 }
 \arguments{
-\item{y}{The pair of the time series (the matrix) in columns.}
+\item{y}{the pair of the time series (the matrix) in columns.}
 
-\item{order}{The order p of the model. If \code{NULL}, then it is selected
+\item{order}{the order p of the model. If \code{NULL}, then it is selected
 automatically based on the selected information criterion.}
 
-\item{h}{Length of forecasting horizon.}
+\item{h}{length of forecasting horizon.}
 
-\item{holdout}{If \code{TRUE}, holdout sample of size \code{h} is taken from
+\item{holdout}{if \code{TRUE}, holdout sample of size \code{h} is taken from
 the end of the data.
 nothing happens.}
 
-\item{silent}{If \code{TRUE}, then the plot is produced. Otherwise nothing happens.}
+\item{silent}{if \code{TRUE}, then the plot is produced. Otherwise nothing happens.}
 
-\item{ic}{The information criterion used in the model selection procedure.}
+\item{ic}{the information criterion used in the model selection procedure.}
 
-\item{restrict}{If \code{FALSE}, then VAR(p) is constructed instead of CAR(p).}
+\item{restrict}{if \code{FALSE}, then VAR(p) is constructed instead of CAR(p).}
 }
 \value{
 Object of class "vsmooth" is returned. It contains the following list of

@@ -3,6 +3,7 @@ complex v0.0.2 (Release data: 2022-09-07)
 
 Changes:
 * Added complex variance, covariance and correlation, cvar, ccov and cor functions respectively.
+* Implemented complex ACF via cacf().
 
 
 complex v0.0.1 (Release data: 2019-07-01)
