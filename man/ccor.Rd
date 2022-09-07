@@ -29,6 +29,10 @@ in the mean (see \link[stats]{mean}).}
 }
 \value{
 A scalar or a matrix with resulting complex variables.
+
+#' @references \itemize{
+\item Svetunkov, S. (2022) Complex Autoregressions. In Press.
+}
 }
 \description{
 Functions return complex variance, covariance and correlation based on the

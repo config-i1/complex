@@ -19,6 +19,11 @@
 #' in the mean (see \link[stats]{mean}).
 #'
 #' @return A scalar or a matrix with resulting complex variables.
+#'
+#' #' @references \itemize{
+#' \item Svetunkov, S. (2022) Complex Autoregressions. In Press.
+#' }
+#'
 #' @seealso \code{\link[stats]{cor}}
 #'
 #' @examples
