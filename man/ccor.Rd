@@ -21,7 +21,7 @@ variable \code{y} is ignored.}
 
 \item{...}{parameters passed to \code{mean()} functions. For example, this can be
 \code{na.rm=TRUE} to remove missing values or \code{trim} to define the trimming
-in the mean (see \link[stats]{mean}).}
+in the mean (see \link[base]{mean}).}
 
 \item{y}{second vector to calculate covariance or correlations with.}
 

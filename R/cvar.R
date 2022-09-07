@@ -16,7 +16,7 @@
 #' @param V complex covariance matrix.
 #' @param ... parameters passed to \code{mean()} functions. For example, this can be
 #' \code{na.rm=TRUE} to remove missing values or \code{trim} to define the trimming
-#' in the mean (see \link[stats]{mean}).
+#' in the mean (see \link[base]{mean}).
 #'
 #' @return A scalar or a matrix with resulting complex variables.
 #'

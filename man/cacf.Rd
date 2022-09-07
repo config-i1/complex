@@ -9,7 +9,7 @@ cacf(x, lag.max = NULL, type = c("correlation", "covariance"), plot = TRUE)
 \arguments{
 \item{x}{vector of complex variables.}
 
-\item{lag.max}{maximum number of lags. See \link[stats](acf) for more details.}
+\item{lag.max}{maximum number of lags. See \link[stats]{acf} for more details.}
 
 \item{type}{character string giving the type of cacf to be computed. Allowed values
 are "correlation" (the default) and "covariance". Will be partially matched.}
@@ -37,8 +37,8 @@ or complex autocorrelation function.
 }
 \details{
 For \code{type="correlation"} and \code{"covariance"}, the estimates are based
-on the sample complex covariance and use complex correlation \link[complex](ccor) and complex
-covariance \link[complex](ccov) respectively. Note that the function does not calculate values for
+on the sample complex covariance and use complex correlation \link[complex]{ccor} and complex
+covariance \link[complex]{ccov} respectively. Note that the function does not calculate values for
 lag 0. Also, the function will automatically remove NAs. Finally, function does not have
 \code{demean} parameter, because \code{ccov()} and \code{ccor()} do that automatically.
 

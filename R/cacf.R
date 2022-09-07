@@ -4,8 +4,8 @@
 #' or complex autocorrelation function.
 #'
 #' For \code{type="correlation"} and \code{"covariance"}, the estimates are based
-#' on the sample complex covariance and use complex correlation \link[complex](ccor) and complex
-#' covariance \link[complex](ccov) respectively. Note that the function does not calculate values for
+#' on the sample complex covariance and use complex correlation \link[complex]{ccor} and complex
+#' covariance \link[complex]{ccov} respectively. Note that the function does not calculate values for
 #' lag 0. Also, the function will automatically remove NAs. Finally, function does not have
 #' \code{demean} parameter, because \code{ccov()} and \code{ccor()} do that automatically.
 #'
@@ -19,7 +19,7 @@
 #' @keywords univar
 #'
 #' @param x vector of complex variables.
-#' @param lag.max maximum number of lags. See \link[stats](acf) for more details.
+#' @param lag.max maximum number of lags. See \link[stats]{acf} for more details.
 #' @param type character string giving the type of cacf to be computed. Allowed values
 #' are "correlation" (the default) and "covariance". Will be partially matched.
 #' @param plot logical. If \code{TRUE} (the default) the cacf is plotted on complex plane
@@ -48,6 +48,7 @@
 #' # Calculate CACF
 #' cacf(x)
 #'
+#' @importFrom greybox xregExpander
 #' @export
 cacf <- function(x, lag.max=NULL, type=c("correlation", "covariance"),
                  plot=TRUE){
@@ -83,22 +84,7 @@ cacf <- function(x, lag.max=NULL, type=c("correlation", "covariance"),
                         "correlation"="Autocorrelation function");
 
     if(plot){
-        parDefault <- par(no.readonly=TRUE);
-        on.exit(par(parDefault));
-
-        layout(matrix(c(1,2,1,3),2,2))
-        par(mar=c(4,4,4,2))
-        plot(xACF, type="l", xlab="Real ACF", ylab="Imaginary ACF", main=mainLabel);
-        points(xACF);
-        text(Re(xACF), Im(xACF), c(1:lag.max), pos=3);
-
-        par(mar=c(4,4,1,2))
-        plot(Re(xACF), type="h", xlab="Lag", ylab="Real ACF");
-        abline(h=0);
-
-        plot(Im(xACF), type="h", xlab="Lag", ylab="Imaginary ACF");
-        abline(h=0);
-
+        plot(acf.out);
         invisible(acf.out);
     }
     else{
@@ -106,12 +92,14 @@ cacf <- function(x, lag.max=NULL, type=c("correlation", "covariance"),
     }
 }
 
+#' @importFrom stats setNames
 #' @export
 print.cacf <- function(x, ...){
     cat("Complex Autocorrelations of series", x$series, "by lag\n\n");
     x$acf |> setNames(x$lag) |> print();
 }
 
+#' @importFrom graphics layout text
 #' @export
 plot.cacf <- function(x, ...){
     mainLabel <- switch(x$type,
