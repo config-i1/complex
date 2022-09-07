@@ -13,9 +13,6 @@
 #' [ a_{j,2} |  a_{j,1} ]
 #' }
 #'
-#' For some more information about the model and its implementation, see the
-#' vignette: \code{vignette("CAR","Complex")}
-#'
 #' @author Ivan Svetunkov, \email{ivan@svetunkov.ru}
 #' @keywords univar ts models regression
 #'
@@ -53,7 +50,7 @@
 #' \item \code{ICsAll} - In case of the order selection, the values of information
 #' criteria for the tested models.
 #' }
-#' @seealso \code{\link[smooth]{ves}}
+#' @seealso \code{\link[legion]{ves}}
 #'
 #' @examples
 #'
@@ -69,6 +66,7 @@
 #' @importFrom graphics abline lines par plot points
 #' @importFrom stats AIC BIC deltat frequency start time ts fitted
 #' @import smooth
+#' @import legion
 #'
 #' @export
 CAR <- function(y, order=NULL, h=13, holdout=TRUE, silent=TRUE,

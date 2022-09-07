@@ -4,8 +4,15 @@
 \alias{CAR}
 \title{Complex Autoregression}
 \usage{
-CAR(y, order = NULL, h = 13, holdout = TRUE, silent = TRUE,
-  ic = c("AIC", "AICc", "BIC", "BICc"), restrict = TRUE)
+CAR(
+  y,
+  order = NULL,
+  h = 13,
+  holdout = TRUE,
+  silent = TRUE,
+  ic = c("AIC", "AICc", "BIC", "BICc"),
+  restrict = TRUE
+)
 }
 \arguments{
 \item{y}{The pair of the time series (the matrix) in columns.}
@@ -64,9 +71,6 @@ A_j =
 [ a_{j,1} | -a_{j,2} ]
 [ a_{j,2} |  a_{j,1} ]
 }
-
-For some more information about the model and its implementation, see the
-vignette: \code{vignette("CAR","Complex")}
 }
 \examples{
 
@@ -78,7 +82,7 @@ CAR(Y,h=10,holdout=TRUE)
 
 }
 \seealso{
-\code{\link[smooth]{ves}}
+\code{\link[legion]{ves}}
 }
 \author{
 Ivan Svetunkov, \email{ivan@svetunkov.ru}
