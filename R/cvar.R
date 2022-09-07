@@ -15,7 +15,8 @@
 #' @param y Second vector to calculate covariance or correlations with.
 #' @param V Complex covariance matrix.
 #' @param ... Parameters passed to \code{mean()} functions. For example, this can be
-#' \code{na.rm=TRUE} to remove missing values.
+#' \code{na.rm=TRUE} to remove missing values or \code{trim} to define the trimming
+#' in the mean (see \link[stats]{mean}).
 #'
 #' @return A scalar or a matrix with resulting complex variables.
 #' @seealso \code{\link[stats]{cor}}
@@ -30,7 +31,7 @@
 #' z <- cbind(x,y)
 #'
 #' # Calculate measures
-#' cvar(x,y)
+#' cvar(x)
 #' cvar(z)
 #' ccor(x,y)
 #' ccor(z)

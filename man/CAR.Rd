@@ -77,7 +77,7 @@ A_j =
 Y <- ts(cbind(rnorm(100,100,10),rnorm(100,75,8)),frequency=4)
 
 # The simplest model applied to the data with the default values
-CAR(Y,h=10,holdout=TRUE)
+CARModel <- CAR(Y,h=10,holdout=TRUE)
 
 
 }

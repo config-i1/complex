@@ -20,9 +20,7 @@ Imports:
     stats,
     graphics,
     nloptr,
-    mvtnorm,
-    utils,
-    zoo
+    mvtnorm
 Suggests:
     testthat,
     knitr,
