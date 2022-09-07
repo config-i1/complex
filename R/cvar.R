@@ -13,6 +13,7 @@
 #' @param x Vector or matrix of complex variables. If it is matrix then the
 #' variable \code{y} is ignored.
 #' @param y Second vector to calculate covariance or correlations with.
+#' @param V Complex covariance matrix.
 #' @param ... Parameters passed to \code{mean()} functions. For example, this can be
 #' \code{na.rm=TRUE} to remove missing values.
 #'

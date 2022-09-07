@@ -23,6 +23,8 @@ variable \code{y} is ignored.}
 \code{na.rm=TRUE} to remove missing values.}
 
 \item{y}{Second vector to calculate covariance or correlations with.}
+
+\item{V}{Complex covariance matrix.}
 }
 \value{
 A scalar or a matrix with resulting complex variables.
