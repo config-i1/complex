@@ -67,7 +67,7 @@ cacf <- function(x, lag.max=NULL, type=c("correlation", "covariance"),
         stop("'lag.max' must be at least 1");
     }
 
-    xLagged <- xregExpander(x, lags=c(-lag.max:0), gaps="NAs");
+    xLagged <- xregExpander(x, lags=c(-1:-lag.max), gaps="NAs");
     xACF <- vector("complex", lag.max);
 
     for(i in 1:lag.max){
@@ -84,7 +84,7 @@ cacf <- function(x, lag.max=NULL, type=c("correlation", "covariance"),
                         "correlation"="Autocorrelation function");
 
     if(plot){
-        plot(acf.out);
+        plot(acf.out, 1);
         invisible(acf.out);
     }
     else{
@@ -101,24 +101,53 @@ print.cacf <- function(x, ...){
 
 #' @importFrom graphics layout text
 #' @export
-plot.cacf <- function(x, ...){
+plot.cacf <- function(x, which=c(1,2), ask=TRUE, ...){
     mainLabel <- switch(x$type,
-                        "covariance"="Autocovariance function",
-                        "correlation"="Autocorrelation function");
+                        "covariance"="Complex autocovariance function",
+                        "correlation"="Complex autocorrelation function");
 
-    parDefault <- par(no.readonly=TRUE);
-    on.exit(par(parDefault));
+    # Define, whether to wait for the hit of "Enter"
+    if(ask){
+        devAskNewPage(TRUE);
+        on.exit(devAskNewPage(FALSE));
+    }
 
-    layout(matrix(c(1,2,1,3),2,2))
-    par(mar=c(4,4,4,2))
-    plot(x$acf, type="l", xlab="Real ACF", ylab="Imaginary ACF", main=mainLabel);
-    points(x$acf);
-    text(Re(x$acf), Im(x$acf), c(1:length(x)), pos=3);
+    for(i in which){
+        if(i==1){
+            parDefault <- par(no.readonly=TRUE);
+            on.exit(par(parDefault),add=TRUE);
 
-    par(mar=c(4,4,1,2))
-    plot(Re(x$acf), type="h", xlab="Lag", ylab="Real ACF");
-    abline(h=0);
+            layout(matrix(c(1,2,1,3),2,2))
+            par(mar=c(4,4,4,2))
+            plot(x$acf, type="l",
+                 xlab="Real CACF", ylab="Imaginary CACF", main=mainLabel);
+            points(x$acf);
+            text(Re(x$acf), Im(x$acf), c(1:length(x$acf)), pos=3);
 
-    plot(Im(x$acf), type="h", xlab="Lag", ylab="Imaginary ACF");
-    abline(h=0);
+            par(mar=c(4,4,1,2))
+            plot(Re(x$acf), type="h", xlab="Lag", ylab="Real CACF");
+            abline(h=0);
+
+            plot(Im(x$acf), type="h", xlab="Lag", ylab="Imaginary CACF");
+            abline(h=0);
+        }
+        if(i==2){
+            parDefault <- par(no.readonly=TRUE);
+            on.exit(par(parDefault),add=TRUE);
+
+            layout(matrix(c(1,2,1,3),2,2))
+            par(mar=c(4,4,4,2))
+            plot(abs(x$acf), Arg(x$acf), type="l",
+                 xlab="Absolute of CACF", ylab="Argument of CACF", main=mainLabel);
+            points(abs(x$acf), Arg(x$acf));
+            text(abs(x$acf), Arg(x$acf), c(1:length(x$acf)), pos=3);
+
+            par(mar=c(4,4,1,2))
+            plot(abs(x$acf), type="h", xlab="Lag", ylab="Absolute of CACF");
+            abline(h=0);
+
+            plot(Arg(x$acf), type="h", xlab="Lag", ylab="Argument of CACF");
+            abline(h=0);
+        }
+    }
 }
