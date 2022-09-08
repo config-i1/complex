@@ -99,9 +99,9 @@ print.cacf <- function(x, ...){
     x$acf |> setNames(x$lag) |> print();
 }
 
-#' @importFrom graphics layout text
+#' @importFrom graphics layout text devAskNewPage
 #' @export
-plot.cacf <- function(x, which=c(1,2), ask=TRUE, ...){
+plot.cacf <- function(x, which=c(1,2), ask=length(which)>1, ...){
     mainLabel <- switch(x$type,
                         "covariance"="Complex autocovariance function",
                         "correlation"="Complex autocorrelation function");
