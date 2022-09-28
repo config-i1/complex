@@ -1,34 +1,35 @@
-#' Complex Autocorrelation Function Estimation
+#' Pseudo Correlation Function Estimation
 #'
-#' The function computes (and by default plots) estimates of the complex autocovariance
-#' or complex autocorrelation function.
+#' The function computes (and by default plots) estimates of the Pseudo Covariance
+#' or Pseudo Correlation function.
 #'
 #' For \code{type="correlation"} and \code{"covariance"}, the estimates are based
-#' on the sample complex covariance and use complex correlation \link[complex]{ccor} and complex
-#' covariance \link[complex]{ccov} respectively. Note that the function does not calculate values for
+#' on the sample pseudo covariance and use pseudo correlation \link[complex]{pcor} and complex
+#' covariance \link[complex]{pcov} respectively. Note that the function does not calculate values for
 #' lag 0. Also, the function will automatically remove NAs. Finally, function does not have
-#' \code{demean} parameter, because \code{ccov()} and \code{ccor()} do that automatically.
+#' \code{demean} parameter (as, for example, is done in \link[stats]{acf}), because \code{pcov()}
+#' and \code{pcor()} do that automatically.
 #'
-#' The generic function plot has a method for objects of class "cacf".
+#' The generic function plot has a method for objects of class "pcf".
 #'
 #' The lag is returned and plotted in units of time, and not numbers of observations.
 #'
-#' There is a print method for objects of class "cacf".
+#' There is a print method for objects of class "pcf".
 #'
 #' @author Ivan Svetunkov, \email{ivan@svetunkov.ru}
 #' @keywords univar
 #'
 #' @param x vector of complex variables.
 #' @param lag.max maximum number of lags. See \link[stats]{acf} for more details.
-#' @param type character string giving the type of cacf to be computed. Allowed values
+#' @param type character string giving the type of pcf to be computed. Allowed values
 #' are "correlation" (the default) and "covariance". Will be partially matched.
-#' @param plot logical. If \code{TRUE} (the default) the cacf is plotted on complex plane
+#' @param plot logical. If \code{TRUE} (the default) the pcf is plotted on complex plane
 #' and as two linear graphs for real and imaginary parts.
 #'
-#' @return An object of class "cacf", which is a list with the following elements:
+#' @return An object of class "pcf", which is a list with the following elements:
 #' \itemize{
-#' \item \code{lag} A three dimensional array containing the lags at which the cacf is estimated.
-#' \item \code{acf} An array with the same dimensions as lag containing the estimated cacf.
+#' \item \code{lag} A three dimensional array containing the lags at which the pcf is estimated.
+#' \item \code{acf} An array with the same dimensions as lag containing the estimated pcf.
 #' \item \code{type} The type of correlation (same as the type argument).
 #' \item \code{n.used} The number of observations in the time series.
 #' \item \code{series} The name of the series x.
@@ -38,19 +39,19 @@
 #' \item Svetunkov, S. (2022) Complex Autoregressions. In Press.
 #' }
 #'
-#' @seealso \link[stats]{acf}, \link[complex]{ccor}
+#' @seealso \link[stats]{acf}, \link[complex]{pcor}
 #'
 #' @examples
 #'
 #' # Generate random complex variables
 #' x <- complex(real=rnorm(100,10,10), imaginary=rnorm(100,10,10))
 #'
-#' # Calculate CACF
-#' cacf(x)
+#' # Calculate PCF
+#' pcf(x)
 #'
 #' @importFrom greybox xregExpander
 #' @export
-cacf <- function(x, lag.max=NULL, type=c("correlation", "covariance"),
+pcf <- function(x, lag.max=NULL, type=c("correlation", "covariance"),
                  plot=TRUE){
     # Function is based on acf() from stats
 
@@ -72,12 +73,12 @@ cacf <- function(x, lag.max=NULL, type=c("correlation", "covariance"),
 
     for(i in 1:lag.max){
         xACF[i] <- switch(type,
-                          "covariance"=ccov(xLagged[,1], xLagged[,i+1], na.rm=TRUE),
-                          "correlation"=ccor(xLagged[,1], xLagged[,i+1], na.rm=TRUE));
+                          "covariance"=pcov(xLagged[,1], xLagged[,i+1], na.rm=TRUE),
+                          "correlation"=pcor(xLagged[,1], xLagged[,i+1], na.rm=TRUE));
     }
 
     acf.out <- structure(list(acf=xACF, type=type, n.used=obs,
-                              lag=c(1:lag.max), series=series), class="cacf");
+                              lag=c(1:lag.max), series=series), class="pcf");
 
     mainLabel <- switch(type,
                         "covariance"="Autocovariance function",
@@ -94,14 +95,15 @@ cacf <- function(x, lag.max=NULL, type=c("correlation", "covariance"),
 
 #' @importFrom stats setNames
 #' @export
-print.cacf <- function(x, ...){
+print.pcf <- function(x, ...){
     cat("Complex Autocorrelations of series", x$series, "by lag\n\n");
     x$acf |> setNames(x$lag) |> print();
 }
 
-#' @importFrom graphics layout text devAskNewPage
+#' @importFrom graphics layout text
+#' @importFrom grDevices devAskNewPage
 #' @export
-plot.cacf <- function(x, which=c(1,2), ask=length(which)>1, ...){
+plot.pcf <- function(x, which=c(1,2), ask=length(which)>1, ...){
     mainLabel <- switch(x$type,
                         "covariance"="Complex autocovariance function",
                         "correlation"="Complex autocorrelation function");

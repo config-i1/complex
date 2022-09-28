@@ -16,16 +16,17 @@
 #' @author Ivan Svetunkov, \email{ivan@svetunkov.ru}
 #' @keywords univar ts models regression
 #'
-#' @param y the pair of the time series (the matrix) in columns.
+#' @param data the pair of the time series (the matrix) in columns.
 #' @param order the order p of the model. If \code{NULL}, then it is selected
 #' automatically based on the selected information criterion.
+#' @param restrict if \code{FALSE}, then VAR(p) is constructed instead of CAR(p).
+#' @param max.order The maximum order to consider.
 #' @param h length of forecasting horizon.
 #' @param holdout if \code{TRUE}, holdout sample of size \code{h} is taken from
 #' the end of the data.
 #' nothing happens.
 #' @param silent if \code{TRUE}, then the plot is produced. Otherwise nothing happens.
 #' @param ic the information criterion used in the model selection procedure.
-#' @param restrict if \code{FALSE}, then VAR(p) is constructed instead of CAR(p).
 #'
 #' @return Object of class "vsmooth" is returned. It contains the following list of
 #' values:
@@ -34,7 +35,7 @@
 #' \item \code{timeElapsed} - The time elapsed for the construction of the model;
 #' \item \code{coefficients} - The vector of all the estimated coefficients;
 #' \item \code{nParam} - The number of estimated parameters;
-#' \item \code{y} - The matrix with the original data;
+#' \item \code{data} - The matrix with the original data;
 #' \item \code{fitted} - The matrix of the fitted values;
 #' \item \code{holdout} - The matrix with the holdout values (if \code{holdout=TRUE} in
 #' the estimation);
@@ -69,8 +70,9 @@
 #' @import legion
 #'
 #' @export
-CAR <- function(y, order=NULL, h=13, holdout=TRUE, silent=TRUE,
-                ic=c("AIC","AICc","BIC","BICc"), restrict=TRUE){
+CAR <- function(data, order=NULL, max.order=frequency(data), restrict=TRUE,
+                h=13, holdout=TRUE, silent=TRUE,
+                ic=c("AIC","AICc","BIC","BICc")){
     # The function fits the restricted VAR, which corresponds to CAR. The likelihood is multivariate normal.
     # restrict defines whether the CAR models is constructed or a basic VAR
 
@@ -84,45 +86,45 @@ CAR <- function(y, order=NULL, h=13, holdout=TRUE, silent=TRUE,
                  "BICc"=BICc);
 
 
-    if(!is.null(ncol(y)) && (ncol(y)>2 || ncol(y)==1)){
+    if(!is.null(ncol(data)) && (ncol(data)>2 || ncol(data)==1)){
         stop("This function can only work with two series.", call.=FALSE);
     }
 
     # Prepare the sample
-    obsInSample <- nrow(y) - h * holdout;
-    obsAll <- nrow(y) + h * (!holdout);
+    obsInSample <- nrow(data) - h * holdout;
+    obsAll <- nrow(data) + h * (!holdout);
     nSeries <- 2;
 
     # Prepare the data and the matrices
-    yInSample <- y[1:obsInSample,];
+    yInSample <- data[1:obsInSample,];
     yFitted <- matrix(0,obsInSample,nSeries);
     yForecast <- matrix(NA,h,nSeries);
     errors <- matrix(NA,obsInSample,nSeries);
 
     # Write down the names and ts structure
-    dataNames <- colnames(y);
-    dataFreq <- frequency(y);
-    dataDeltat <- deltat(y);
-    dataStart <- start(y);
-    yForecastStart <- time(y)[obsInSample]+deltat(y);
+    dataNames <- colnames(data);
+    dataFreq <- frequency(data);
+    dataDeltat <- deltat(data);
+    dataStart <- start(data);
+    yForecastStart <- time(data)[obsInSample]+deltat(data);
     colnames(yFitted) <- colnames(yForecast) <- colnames(errors) <- dataNames;
 
     ##### If order needs to be selected #####
     if(is.null(order)){
-        CARmodels <- vector("list",dataFreq);
+        CARmodels <- vector("list",max.order);
         if(!silent){
             cat("Estimation progress:    ");
         }
 
-        for(i in 1:dataFreq){
+        for(i in 1:max.order){
             if(!silent){
                 if(i==1){
                     cat("\b");
                 }
-                cat(paste0(rep("\b",nchar(round((i-1)/dataFreq,2)*100)+1),collapse=""));
-                cat(paste0(round(i/dataFreq,2)*100,"%"));
+                cat(paste0(rep("\b",nchar(round((i-1)/max.order,2)*100)+1),collapse=""));
+                cat(paste0(round(i/max.order,2)*100,"%"));
             }
-            CARmodels[[i]] <- CAR(y=y, order=i, h=h, holdout=holdout, restrict=TRUE);
+            CARmodels[[i]] <- CAR(data=data, order=i, h=h, holdout=holdout, restrict=TRUE);
         }
 
         if(!silent){
@@ -130,7 +132,7 @@ CAR <- function(y, order=NULL, h=13, holdout=TRUE, silent=TRUE,
         }
 
         CARICs <- sapply(CARmodels,IC);
-        names(CARICs) <- paste0("CAR(",c(1:dataFreq),")");
+        names(CARICs) <- paste0("CAR(",c(1:max.order),")");
         i <- which.min(CARICs);
         CARmodels[[i]]$ICsAll <- CARICs;
 
@@ -229,12 +231,12 @@ CAR <- function(y, order=NULL, h=13, holdout=TRUE, silent=TRUE,
         errors[] <- yInSample - yFitted;
         yForecast[] <- CARForecaster(A,yInSample,order);
 
-        yForecast <- ts(yForecast,start=time(y)[obsInSample] + dataDeltat,frequency=dataFreq);
+        yForecast <- ts(yForecast,start=time(data)[obsInSample] + dataDeltat,frequency=dataFreq);
         yFitted <- ts(yFitted,start=dataStart,frequency=dataFreq);
-        yInSample <- ts(y,start=dataStart,frequency=dataFreq);
+        yInSample <- ts(data,start=dataStart,frequency=dataFreq);
         errors <- ts(errors,start=dataStart,frequency=dataFreq);
         if(holdout){
-            yHoldout <- ts(y[-c(1:obsInSample),],start=time(y)[obsInSample] + dataDeltat,frequency=dataFreq);
+            yHoldout <- ts(data[-c(1:obsInSample),],start=time(data)[obsInSample] + dataDeltat,frequency=dataFreq);
         }
         else{
             yHoldout <- NA;
@@ -266,11 +268,11 @@ CAR <- function(y, order=NULL, h=13, holdout=TRUE, silent=TRUE,
         }
 
         model <- list(model=modelname, timeElapsed=Sys.time()-startTime,
-                      y=yInSample, fitted=yFitted, coefficients=A, residuals=errors, forecast=yForecast,
+                      data=yInSample, fitted=yFitted, coefficients=A, residuals=errors, forecast=yForecast,
                       nParam=parametersNumber, logLik=logLik, holdout=yHoldout, PI=NA, loss="likelihood",
                       lossValue=-logLik, logLik=logLik, Sigma=1/obsInSample * sum(t(errors) %*% errors),
                       accuracy=errorMeasures);
-        model <- structure(model,class=c("vsmooth","smooth"));
+        model <- structure(model,class=c("legion","smooth"));
         model$ICs <- c(AIC(model),AICc(model),BIC(model),BICc(model));
         names(model$ICs) <- c("AIC","AICc","BIC","BICc");
     }
@@ -288,15 +290,15 @@ CAR <- function(y, order=NULL, h=13, holdout=TRUE, silent=TRUE,
             par(mar=c(4,4,2,1),mfcol=c(perPage,1));
             for(i in packs[j]:(packs[j+1]-1)){
                 # if(any(intervalType==c("u","i"))){
-                #     plotRange <- range(min(y[,i],yForecast[,i],yFitted[,i],PI[,i*2-1]),
-                #                        max(y[,i],yForecast[,i],yFitted[,i],PI[,i*2]));
+                #     plotRange <- range(min(data[,i],yForecast[,i],yFitted[,i],PI[,i*2-1]),
+                #                        max(data[,i],yForecast[,i],yFitted[,i],PI[,i*2]));
                 # }
                 # else{
-                plotRange <- range(min(y[,i],yForecast[,i],yFitted[,i],na.rm=TRUE),
-                                   max(y[,i],yForecast[,i],yFitted[,i],na.rm=TRUE));
+                plotRange <- range(min(data[,i],yForecast[,i],yFitted[,i],na.rm=TRUE),
+                                   max(data[,i],yForecast[,i],yFitted[,i],na.rm=TRUE));
                 # }
-                plot(y[,i],main=paste0(modelname," ",dataNames[i]),ylab="Y",
-                     ylim=plotRange, xlim=range(time(y[,i])[1],time(yForecast)[max(h,1)]),
+                plot(data[,i],main=paste0(modelname," ",dataNames[i]),ylab="Y",
+                     ylim=plotRange, xlim=range(time(data[,i])[1],time(yForecast)[max(h,1)]),
                      type="l");
                 lines(yFitted[,i],col="purple",lwd=2,lty=2);
                 if(h>1){

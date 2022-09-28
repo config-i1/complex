@@ -1,10 +1,10 @@
-#' Complex Correlation, Variance and Covariance (Matrices)
+#' Pseudo Correlation, Variance and Covariance (Matrices)
 #'
-#' Functions return complex variance, covariance and correlation based on the
+#' Functions return complex pseudo-variance, pseudo-covariance and pseudo-correlation based on the
 #' provided complex vector/matrix \code{x}.
 #'
-#' Functions calculate complex statistics for complex variables. Only the parametric
-#' correlation is supported by the function. If \code{x} is matrix, then \code{y}
+#' Functions calculate pseudo statistics for complex variables. Only the parametric
+#' pseudo-correlation is supported by the function. If \code{x} is matrix, then \code{y}
 #' is ignored.
 #'
 #' @author Ivan Svetunkov, \email{ivan@svetunkov.ru}
@@ -12,8 +12,8 @@
 #'
 #' @param x vector or matrix of complex variables. If it is matrix then the
 #' variable \code{y} is ignored.
-#' @param y second vector to calculate covariance or correlations with.
-#' @param V complex covariance matrix.
+#' @param y second vector to calculate pseudo-covariance or pseudo-correlations with.
+#' @param V complex pseudo-covariance matrix.
 #' @param ... parameters passed to \code{mean()} functions. For example, this can be
 #' \code{na.rm=TRUE} to remove missing values or \code{trim} to define the trimming
 #' in the mean (see \link[base]{mean}).
@@ -36,14 +36,14 @@
 #' z <- cbind(x,y)
 #'
 #' # Calculate measures
-#' cvar(x)
-#' cvar(z)
-#' ccor(x,y)
-#' ccor(z)
+#' pvar(x)
+#' pvar(z)
+#' pcor(x,y)
+#' pcor(z)
 #'
-#' @rdname ccor
+#' @rdname pcor
 #' @export
-cvar <- function(x, ...){
+pvar <- function(x, ...){
     if(is.matrix(x)){
         xMeans <- matrix(colMeans(x, ...),nrow(x),ncol(x),byrow=TRUE);
         return(t(x-xMeans) %*% (x-xMeans));
@@ -53,30 +53,30 @@ cvar <- function(x, ...){
     }
 }
 
-#' @rdname ccor
+#' @rdname pcor
 #' @export
-ccov <- function(x, y, ...){
+pcov <- function(x, y, ...){
     if(is.matrix(x)){
-        return(cvar(x, ...));
+        return(pvar(x, ...));
     }
     else{
         return(mean((x-mean(x, ...))*(y-mean(y, ...)), ...))
     }
 }
 
-#' @rdname ccor
+#' @rdname pcor
 #' @export
-ccor <- function(x, y, ...){
+pcor <- function(x, y, ...){
     if(is.matrix(x)){
-        ccov2ccor(cvar(x, ...));
+        pcov2pcor(pvar(x, ...));
     }
     else{
-        return(ccov(x, y, ...) / sqrt(cvar(x, ...)*cvar(y, ...)));
+        return(pcov(x, y, ...) / sqrt(pvar(x, ...)*pvar(y, ...)));
     }
 }
 
-#' @rdname ccor
+#' @rdname pcor
 #' @export
-ccov2ccor <- function(V){
+pcov2pcor <- function(V){
     return(V / sqrt(diag(V) %*% t(diag(V))));
 }

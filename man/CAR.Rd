@@ -5,20 +5,25 @@
 \title{Complex Autoregression}
 \usage{
 CAR(
-  y,
+  data,
   order = NULL,
+  max.order = frequency(data),
+  restrict = TRUE,
   h = 13,
   holdout = TRUE,
   silent = TRUE,
-  ic = c("AIC", "AICc", "BIC", "BICc"),
-  restrict = TRUE
+  ic = c("AIC", "AICc", "BIC", "BICc")
 )
 }
 \arguments{
-\item{y}{the pair of the time series (the matrix) in columns.}
+\item{data}{the pair of the time series (the matrix) in columns.}
 
 \item{order}{the order p of the model. If \code{NULL}, then it is selected
 automatically based on the selected information criterion.}
+
+\item{max.order}{The maximum order to consider.}
+
+\item{restrict}{if \code{FALSE}, then VAR(p) is constructed instead of CAR(p).}
 
 \item{h}{length of forecasting horizon.}
 
@@ -29,8 +34,6 @@ nothing happens.}
 \item{silent}{if \code{TRUE}, then the plot is produced. Otherwise nothing happens.}
 
 \item{ic}{the information criterion used in the model selection procedure.}
-
-\item{restrict}{if \code{FALSE}, then VAR(p) is constructed instead of CAR(p).}
 }
 \value{
 Object of class "vsmooth" is returned. It contains the following list of
@@ -40,7 +43,7 @@ values:
 \item \code{timeElapsed} - The time elapsed for the construction of the model;
 \item \code{coefficients} - The vector of all the estimated coefficients;
 \item \code{nParam} - The number of estimated parameters;
-\item \code{y} - The matrix with the original data;
+\item \code{data} - The matrix with the original data;
 \item \code{fitted} - The matrix of the fitted values;
 \item \code{holdout} - The matrix with the holdout values (if \code{holdout=TRUE} in
 the estimation);
