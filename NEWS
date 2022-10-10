@@ -2,8 +2,8 @@ complex v0.0.2 (Release data: 2022-10-10)
 ==============
 
 Changes:
-* Added pseudo- variance, covariance and correlation, pvar, pcov and pcor functions respectively.
-* Implemented complex (pseudo) ACF via pacf().
+* Added pseudo- (or "complex") variance, covariance and correlation, pvar, pcov and pcor functions respectively.
+* Implemented complex (pseudo) ACF via cacf() and partial CACF via pcacf().
 * clm() - complex linear model for complex regression models.
 
 

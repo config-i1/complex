@@ -1,7 +1,7 @@
-#' Pseudo Correlation Function Estimation
+#' Complex Correlation Function Estimation
 #'
-#' The function computes (and by default plots) estimates of the Pseudo Covariance
-#' or Pseudo Correlation function.
+#' The functions compute (and by default plot) estimates of the Complex Autocovariance,
+#' or Complex Autocorrelation, or Partial Complex Autocorrelation functions.
 #'
 #' For \code{type="correlation"} and \code{"covariance"}, the estimates are based
 #' on the sample pseudo covariance and use pseudo correlation \link[complex]{pcor} and complex
@@ -10,26 +10,29 @@
 #' \code{demean} parameter (as, for example, is done in \link[stats]{acf}), because \code{pcov()}
 #' and \code{pcor()} do that automatically.
 #'
-#' The generic function plot has a method for objects of class "pacf".
+#' \code{pcacf()} produces the partial complex ACF based on complex regression model of variable
+#' on its lags.
+#'
+#' The generic function plot has a method for objects of class "cacf".
 #'
 #' The lag is returned and plotted in units of time, and not numbers of observations.
 #'
-#' There is a print and plot methods for objects of class "pacf".
+#' There is a print and plot methods for objects of class "cacf".
 #'
 #' @author Ivan Svetunkov, \email{ivan@svetunkov.ru}
 #' @keywords univar
 #'
 #' @param x vector of complex variables.
 #' @param lag.max maximum number of lags. See \link[stats]{acf} for more details.
-#' @param type character string giving the type of PACF to be computed. Allowed values
+#' @param type character string giving the type of CACF to be computed. Allowed values
 #' are "correlation" (the default) and "covariance". Will be partially matched.
-#' @param plot logical. If \code{TRUE} (the default) the PACF is plotted on complex plane
+#' @param plot logical. If \code{TRUE} (the default) the CACF is plotted on complex plane
 #' and as two linear graphs for real and imaginary parts.
 #'
-#' @return An object of class "pacf", which is a list with the following elements:
+#' @return An object of class "cacf", which is a list with the following elements:
 #' \itemize{
-#' \item \code{lag} A three dimensional array containing the lags at which the PACF is estimated.
-#' \item \code{acf} An array with the same dimensions as lag containing the estimated PACF.
+#' \item \code{lag} A three dimensional array containing the lags at which the CACF is estimated.
+#' \item \code{acf} An array with the same dimensions as lag containing the estimated CACF.
 #' \item \code{type} The type of correlation (same as the type argument).
 #' \item \code{n.used} The number of observations in the time series.
 #' \item \code{series} The name of the series x.
@@ -46,13 +49,13 @@
 #' # Generate random complex variables
 #' x <- complex(real=rnorm(100,10,10), imaginary=rnorm(100,10,10))
 #'
-#' # Calculate PACF
-#' pacf(x)
+#' # Calculate CACF
+#' cacf(x)
 #'
-#' @rdname PACF
+#' @rdname CACF
 #' @importFrom greybox xregExpander
 #' @export
-pacf <- function(x, lag.max=NULL, type=c("covariance","correlation"),
+cacf <- function(x, lag.max=NULL, type=c("correlation","covariance"),
                  plot=TRUE){
     # Function is based on acf() from stats
 
@@ -79,11 +82,50 @@ pacf <- function(x, lag.max=NULL, type=c("covariance","correlation"),
     }
 
     acf.out <- structure(list(acf=xACF, type=type, n.used=obs,
-                              lag=c(1:lag.max), series=series), class="pacf");
+                              lag=c(1:lag.max), series=series), class="cacf");
 
-    mainLabel <- switch(type,
-                        "covariance"="Autocovariance function",
-                        "correlation"="Autocorrelation function");
+    if(plot){
+        plot(acf.out, 1);
+        invisible(acf.out);
+    }
+    else{
+        return(acf.out);
+    }
+}
+
+#' @rdname CACF
+#' @export
+pcacf <- function(x, lag.max=NULL, plot=TRUE){
+    # Function is based on acf() from stats
+
+    series <- deparse1(substitute(x))
+
+    obs <- length(x);
+
+    if(is.null(lag.max)){
+        lag.max <- floor(10*log10(obs));
+    }
+    lag.max <- as.integer(min(lag.max, obs - 1));
+    if(is.na(lag.max) || lag.max < 1){
+        stop("'lag.max' must be at least 1");
+    }
+
+    xLagged <- xregExpander(x, lags=c(-1:-lag.max), gaps="NAs");
+    # Set the first column for the intercept
+    xLagged[,1] <- 1;
+    xPACF <- vector("complex", lag.max);
+
+    i <- 1
+
+    # Extract estimated parameters of the complex regression
+    for(i in 1:lag.max){
+        xPACF[i] <- (invert(t(xLagged[-c(1:i),1:(i+1),drop=FALSE]) %*% xLagged[-c(1:i),1:(i+1),drop=FALSE]) %*%
+                         t(xLagged[-c(1:i),1:(i+1),drop=FALSE]) %*%
+                         x[-c(1:i)])[i+1,];
+    }
+
+    acf.out <- structure(list(acf=xPACF, type="partial", n.used=obs,
+                              lag=c(1:lag.max), series=series), class="cacf");
 
     if(plot){
         plot(acf.out, 1);
@@ -95,9 +137,9 @@ pacf <- function(x, lag.max=NULL, type=c("covariance","correlation"),
 }
 
 #' @importFrom stats setNames
-#' @rdname PACF
+#' @rdname CACF
 #' @export
-print.pacf <- function(x, ...){
+print.cacf <- function(x, ...){
     cat("Complex Autocorrelations of series", x$series, "by lag\n\n");
     x$acf |> setNames(x$lag) |> print();
 }
@@ -107,12 +149,13 @@ print.pacf <- function(x, ...){
 #' @param ask Determines, whether to ask before producing a new plot or not.
 #' @importFrom graphics layout text
 #' @importFrom grDevices devAskNewPage
-#' @rdname PACF
+#' @rdname CACF
 #' @export
-plot.pacf <- function(x, which=c(1,2), ask=length(which)>1, ...){
+plot.cacf <- function(x, which=c(1,2), ask=length(which)>1, ...){
     mainLabel <- switch(x$type,
                         "covariance"="Complex autocovariance function",
-                        "correlation"="Complex autocorrelation function");
+                        "correlation"="Complex autocorrelation function",
+                        "partial"="Partial complex autocorrelation function");
 
     # Define, whether to wait for the hit of "Enter"
     if(ask){
