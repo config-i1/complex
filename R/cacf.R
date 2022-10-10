@@ -147,6 +147,8 @@ print.cacf <- function(x, ...){
 #' @param which Determines, which of the plots to produce. 1 is the plot of real
 #' and imaginary parts. 2 is the plot of absolute value and the argument.
 #' @param ask Determines, whether to ask before producing a new plot or not.
+#' @param ... Parameter needed for consistency with print() and plot() generics.
+#'
 #' @importFrom graphics layout text
 #' @importFrom grDevices devAskNewPage
 #' @rdname CACF

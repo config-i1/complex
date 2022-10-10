@@ -26,6 +26,8 @@ are "correlation" (the default) and "covariance". Will be partially matched.}
 \item{plot}{logical. If \code{TRUE} (the default) the CACF is plotted on complex plane
 and as two linear graphs for real and imaginary parts.}
 
+\item{...}{Parameter needed for consistency with print() and plot() generics.}
+
 \item{which}{Determines, which of the plots to produce. 1 is the plot of real
 and imaginary parts. 2 is the plot of absolute value and the argument.}
 
