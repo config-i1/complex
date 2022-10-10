@@ -10,26 +10,26 @@
 #' \code{demean} parameter (as, for example, is done in \link[stats]{acf}), because \code{pcov()}
 #' and \code{pcor()} do that automatically.
 #'
-#' The generic function plot has a method for objects of class "pcf".
+#' The generic function plot has a method for objects of class "pacf".
 #'
 #' The lag is returned and plotted in units of time, and not numbers of observations.
 #'
-#' There is a print method for objects of class "pcf".
+#' There is a print and plot methods for objects of class "pacf".
 #'
 #' @author Ivan Svetunkov, \email{ivan@svetunkov.ru}
 #' @keywords univar
 #'
 #' @param x vector of complex variables.
 #' @param lag.max maximum number of lags. See \link[stats]{acf} for more details.
-#' @param type character string giving the type of pcf to be computed. Allowed values
+#' @param type character string giving the type of PACF to be computed. Allowed values
 #' are "correlation" (the default) and "covariance". Will be partially matched.
-#' @param plot logical. If \code{TRUE} (the default) the pcf is plotted on complex plane
+#' @param plot logical. If \code{TRUE} (the default) the PACF is plotted on complex plane
 #' and as two linear graphs for real and imaginary parts.
 #'
-#' @return An object of class "pcf", which is a list with the following elements:
+#' @return An object of class "pacf", which is a list with the following elements:
 #' \itemize{
-#' \item \code{lag} A three dimensional array containing the lags at which the pcf is estimated.
-#' \item \code{acf} An array with the same dimensions as lag containing the estimated pcf.
+#' \item \code{lag} A three dimensional array containing the lags at which the PACF is estimated.
+#' \item \code{acf} An array with the same dimensions as lag containing the estimated PACF.
 #' \item \code{type} The type of correlation (same as the type argument).
 #' \item \code{n.used} The number of observations in the time series.
 #' \item \code{series} The name of the series x.
@@ -46,12 +46,13 @@
 #' # Generate random complex variables
 #' x <- complex(real=rnorm(100,10,10), imaginary=rnorm(100,10,10))
 #'
-#' # Calculate PCF
-#' pcf(x)
+#' # Calculate PACF
+#' pacf(x)
 #'
+#' @rdname PACF
 #' @importFrom greybox xregExpander
 #' @export
-pcf <- function(x, lag.max=NULL, type=c("correlation", "covariance"),
+pacf <- function(x, lag.max=NULL, type=c("covariance","correlation"),
                  plot=TRUE){
     # Function is based on acf() from stats
 
@@ -78,7 +79,7 @@ pcf <- function(x, lag.max=NULL, type=c("correlation", "covariance"),
     }
 
     acf.out <- structure(list(acf=xACF, type=type, n.used=obs,
-                              lag=c(1:lag.max), series=series), class="pcf");
+                              lag=c(1:lag.max), series=series), class="pacf");
 
     mainLabel <- switch(type,
                         "covariance"="Autocovariance function",
@@ -94,16 +95,21 @@ pcf <- function(x, lag.max=NULL, type=c("correlation", "covariance"),
 }
 
 #' @importFrom stats setNames
+#' @rdname PACF
 #' @export
-print.pcf <- function(x, ...){
+print.pacf <- function(x, ...){
     cat("Complex Autocorrelations of series", x$series, "by lag\n\n");
     x$acf |> setNames(x$lag) |> print();
 }
 
+#' @param which Determines, which of the plots to produce. 1 is the plot of real
+#' and imaginary parts. 2 is the plot of absolute value and the argument.
+#' @param ask Determines, whether to ask before producing a new plot or not.
 #' @importFrom graphics layout text
 #' @importFrom grDevices devAskNewPage
+#' @rdname PACF
 #' @export
-plot.pcf <- function(x, which=c(1,2), ask=length(which)>1, ...){
+plot.pacf <- function(x, which=c(1,2), ask=length(which)>1, ...){
     mainLabel <- switch(x$type,
                         "covariance"="Complex autocovariance function",
                         "correlation"="Complex autocorrelation function");

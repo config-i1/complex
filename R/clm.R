@@ -709,7 +709,9 @@ summary.clm <- function(object, level=0.95, bootstrap=FALSE, ...){
                                    paste0("Upper ",(1+level)/2*100,"%"));
     ourReturn <- list(coefficients=parametersTable);
     # Mark those that are significant on the selected level
-    ourReturn$significance <- !(abs(parametersTable[,3])<=0 & abs(parametersTable[,4])>=0);
+    # ourReturn$significance <- !(abs(parametersTable[,3])<=0 & abs(parametersTable[,4])>=0);
+    #### It's not clear what significance means in case of complex numbers! So, switch it off
+    ourReturn$significance <- rep(FALSE, length(parameters));
 
     # If there is a likelihood, then produce ICs
     if(!is.na(logLik(object))){
