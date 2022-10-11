@@ -1,6 +1,6 @@
 #' Pseudo Correlation, Variance and Covariance (Matrices)
 #'
-#' Functions return complex pseudo-variance, pseudo-covariance and pseudo-correlation based on the
+#' Functions return (complex) pseudo-variance, pseudo-covariance and pseudo-correlation based on the
 #' provided complex vector/matrix \code{x}.
 #'
 #' Functions calculate pseudo statistics for complex variables. Only the parametric
@@ -36,14 +36,14 @@
 #' z <- cbind(x,y)
 #'
 #' # Calculate measures
-#' pvar(x)
-#' pvar(z)
-#' pcor(x,y)
-#' pcor(z)
+#' cvar(x)
+#' cvar(z)
+#' ccor(x,y)
+#' ccor(z)
 #'
-#' @rdname pcor
+#' @rdname ccor
 #' @export
-pvar <- function(x, ...){
+cvar <- function(x, ...){
     if(is.matrix(x)){
         xMeans <- matrix(colMeans(x, ...),nrow(x),ncol(x),byrow=TRUE);
         return(t(x-xMeans) %*% (x-xMeans));
@@ -53,30 +53,30 @@ pvar <- function(x, ...){
     }
 }
 
-#' @rdname pcor
+#' @rdname ccor
 #' @export
-pcov <- function(x, y, ...){
+ccov <- function(x, y, ...){
     if(is.matrix(x)){
-        return(pvar(x, ...));
+        return(cvar(x, ...));
     }
     else{
         return(mean((x-mean(x, ...))*(y-mean(y, ...)), ...))
     }
 }
 
-#' @rdname pcor
+#' @rdname ccor
 #' @export
-pcor <- function(x, y, ...){
+ccor <- function(x, y, ...){
     if(is.matrix(x)){
-        pcov2pcor(pvar(x, ...));
+        ccov2cor(cvar(x, ...));
     }
     else{
-        return(pcov(x, y, ...) / sqrt(pvar(x, ...)*pvar(y, ...)));
+        return(ccov(x, y, ...) / sqrt(cvar(x, ...)*cvar(y, ...)));
     }
 }
 
-#' @rdname pcor
+#' @rdname ccor
 #' @export
-pcov2pcor <- function(V){
+ccov2cor <- function(V){
     return(V / sqrt(diag(V) %*% t(diag(V))));
 }

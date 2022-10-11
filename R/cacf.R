@@ -4,11 +4,11 @@
 #' or Complex Autocorrelation, or Partial Complex Autocorrelation functions.
 #'
 #' For \code{type="correlation"} and \code{"covariance"}, the estimates are based
-#' on the sample pseudo covariance and use pseudo correlation \link[complex]{pcor} and complex
-#' covariance \link[complex]{pcov} respectively. Note that the function does not calculate values for
+#' on the sample pseudo covariance and use pseudo correlation \link[complex]{ccor} and complex
+#' covariance \link[complex]{ccov} respectively. Note that the function does not calculate values for
 #' lag 0. Also, the function will automatically remove NAs. Finally, function does not have
-#' \code{demean} parameter (as, for example, is done in \link[stats]{acf}), because \code{pcov()}
-#' and \code{pcor()} do that automatically.
+#' \code{demean} parameter (as, for example, is done in \link[stats]{acf}), because \code{ccov()}
+#' and \code{ccor()} do that automatically.
 #'
 #' \code{pcacf()} produces the partial complex ACF based on complex regression model of variable
 #' on its lags.
@@ -42,7 +42,7 @@
 #' \item Svetunkov, S. (2022) Complex Autoregressions. In Press.
 #' }
 #'
-#' @seealso \link[stats]{acf}, \link[complex]{pcor}
+#' @seealso \link[stats]{acf}, \link[complex]{ccor}
 #'
 #' @examples
 #'
@@ -77,8 +77,8 @@ cacf <- function(x, lag.max=NULL, type=c("correlation","covariance"),
 
     for(i in 1:lag.max){
         xACF[i] <- switch(type,
-                          "covariance"=pcov(xLagged[,1], xLagged[,i+1], na.rm=TRUE),
-                          "correlation"=pcor(xLagged[,1], xLagged[,i+1], na.rm=TRUE));
+                          "covariance"=ccov(xLagged[,1], xLagged[,i+1], na.rm=TRUE),
+                          "correlation"=ccor(xLagged[,1], xLagged[,i+1], na.rm=TRUE));
     }
 
     acf.out <- structure(list(acf=xACF, type=type, n.used=obs,

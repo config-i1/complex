@@ -53,11 +53,11 @@ or Complex Autocorrelation, or Partial Complex Autocorrelation functions.
 }
 \details{
 For \code{type="correlation"} and \code{"covariance"}, the estimates are based
-on the sample pseudo covariance and use pseudo correlation \link[complex]{pcor} and complex
-covariance \link[complex]{pcov} respectively. Note that the function does not calculate values for
+on the sample pseudo covariance and use pseudo correlation \link[complex]{ccor} and complex
+covariance \link[complex]{ccov} respectively. Note that the function does not calculate values for
 lag 0. Also, the function will automatically remove NAs. Finally, function does not have
-\code{demean} parameter (as, for example, is done in \link[stats]{acf}), because \code{pcov()}
-and \code{pcor()} do that automatically.
+\code{demean} parameter (as, for example, is done in \link[stats]{acf}), because \code{ccov()}
+and \code{ccor()} do that automatically.
 
 \code{pcacf()} produces the partial complex ACF based on complex regression model of variable
 on its lags.
@@ -78,7 +78,7 @@ cacf(x)
 
 }
 \seealso{
-\link[stats]{acf}, \link[complex]{pcor}
+\link[stats]{acf}, \link[complex]{ccor}
 }
 \author{
 Ivan Svetunkov, \email{ivan@svetunkov.ru}
