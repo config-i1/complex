@@ -492,7 +492,7 @@ clm <- function(formula, data, subset, na.action,
 
         #### Finish forming the matrix of exogenous variables ####
         # Remove the redundant dummies, if there are any
-        varsToLeave <- apply(matrixXreg,2,pvar)!=0;
+        varsToLeave <- apply(matrixXreg,2,cvar)!=0;
         matrixXreg <- matrixXreg[,varsToLeave,drop=FALSE];
         variablesNames <- variablesNames[varsToLeave];
         nVariables <- length(variablesNames);
