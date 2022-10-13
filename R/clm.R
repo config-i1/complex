@@ -116,7 +116,7 @@
 #'
 #' @importFrom nloptr nloptr
 #' @importFrom stats model.frame sd terms model.matrix update.formula as.formula
-#' @importFrom stats .lm.fit formula residuals sigma
+#' @importFrom stats formula residuals sigma
 #' @export clm
 clm <- function(formula, data, subset, na.action,
                 loss=c("LS","likelihood","MSE","MAE","HAM"),
@@ -175,7 +175,6 @@ clm <- function(formula, data, subset, na.action,
     }
 
     CF <- function(B, loss, y, matrixXreg){
-        fitterReturn <- fitter(B, y, matrixXreg);
 
         if(loss=="likelihood"){
             # The original log-likelilhood
@@ -184,9 +183,12 @@ clm <- function(formula, data, subset, na.action,
             CFValue <- NA;
         }
         else if(loss=="LS"){
+            fitterReturn <- fitter(B, y, matrixXreg);
             CFValue <- sum((y - fitterReturn$mu)^2);
         }
         else{
+            B <- complex(real=B[1:(length(B)/2)],imaginary=B[(length(B)/2+1):length(B)]);
+            fitterReturn <- fitter(B, y, matrixXreg);
             yFitted[] <- extractorFitted(fitterReturn$mu, fitterReturn$scale);
 
             if(loss=="MSE"){
@@ -532,9 +534,8 @@ clm <- function(formula, data, subset, na.action,
             BLower <- NULL;
             BUpper <- NULL;
             if(is.null(B)){
-                B <- .lm.fit(matrixXreg,y)$coefficients;
-                BLower <- -Inf;
-                BUpper <- Inf;
+                B <- as.vector(invert(t(matrixXreg) %*% matrixXreg) %*% t(matrixXreg) %*% y);
+                B <- c(Re(B),Im(B));
             }
 
             BLower <- rep(-Inf,length(B));
@@ -557,9 +558,10 @@ clm <- function(formula, data, subset, na.action,
             res <- nloptr(B, CF,
                           opts=list(algorithm=algorithm, xtol_rel=xtol_rel, maxeval=maxeval, print_level=print_level,
                                     maxtime=maxtime, xtol_abs=xtol_abs, ftol_rel=ftol_rel, ftol_abs=ftol_abs),
-                          lb=BLower, ub=BUpper,
+                          # lb=BLower, ub=BUpper,
                           loss=loss, y=y, matrixXreg=matrixXreg);
             B[] <- res$solution;
+            B <- complex(real=B[1:(length(B)/2)],imaginary=B[(length(B)/2+1):length(B)]);
             CFValue <- res$objective;
 
             if(print_level_hidden>0){
