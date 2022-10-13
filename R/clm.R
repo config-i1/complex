@@ -22,7 +22,8 @@
 #' @param loss The type of Loss Function used in optimization. \code{loss} can
 #' be:
 #' \itemize{
-#' \item \code{LS} - least squares method for complex variables;
+#' \item \code{CLS} - Complex Least Squares method, relying on the minimisation of
+#' the complex variance of the error term;
 #' \item \code{likelihood} - the model is estimated via the maximisation of the
 #' likelihood of the complex Normal distribution;
 #' \item \code{MSE} (Mean Squared Error),
@@ -119,7 +120,7 @@
 #' @importFrom stats formula residuals sigma
 #' @export clm
 clm <- function(formula, data, subset, na.action,
-                loss=c("LS","likelihood","MSE","MAE","HAM"),
+                loss=c("CLS","likelihood","MSE","MAE","HAM"),
                 parameters=NULL, fast=FALSE, ...){
     # Start measuring the time of calculations
     startTime <- Sys.time();
@@ -182,7 +183,7 @@ clm <- function(formula, data, subset, na.action,
             # CFValue <- -sum("dnorm" = dnorm(y, mean=fitterReturn$mu, sd=fitterReturn$scale, log=TRUE));
             CFValue <- NA;
         }
-        else if(loss=="LS"){
+        else if(loss=="CLS"){
             fitterReturn <- fitter(B, y, matrixXreg);
             CFValue <- sum((y - fitterReturn$mu)^2);
         }
@@ -525,7 +526,7 @@ clm <- function(formula, data, subset, na.action,
 
     #### Estimate parameters of the model ####
     if(is.null(parameters)){
-        if(loss=="LS"){
+        if(loss=="CLS"){
             B <- as.vector(invert(t(matrixXreg) %*% matrixXreg) %*% t(matrixXreg) %*% y);
             CFValue <- CF(B, loss, y, matrixXreg);
         }
@@ -634,7 +635,7 @@ clm <- function(formula, data, subset, na.action,
     if(loss=="likelihood"){
         logLik <- -CFValue;
     }
-    # else if(loss=="LS"){
+    # else if(loss=="CLS"){
     #     logLik <- -CF(B, loss="likelihood", y, matrixXreg);
     # }
     else{
