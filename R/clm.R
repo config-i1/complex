@@ -22,6 +22,8 @@
 #' @param loss The type of Loss Function used in optimization. \code{loss} can
 #' be:
 #' \itemize{
+#' \item \code{OLS} - Ordinary Least Squares method, relying on the minimisation of
+#' the conjoint variance of the error term;
 #' \item \code{CLS} - Complex Least Squares method, relying on the minimisation of
 #' the complex variance of the error term;
 #' \item \code{likelihood} - the model is estimated via the maximisation of the
@@ -120,7 +122,7 @@
 #' @importFrom stats formula residuals sigma
 #' @export clm
 clm <- function(formula, data, subset, na.action,
-                loss=c("CLS","likelihood","MSE","MAE","HAM"),
+                loss=c("CLS","OLS","likelihood","MSE","MAE","HAM"),
                 parameters=NULL, fast=FALSE, ...){
     # Start measuring the time of calculations
     startTime <- Sys.time();
@@ -186,6 +188,10 @@ clm <- function(formula, data, subset, na.action,
         else if(loss=="CLS"){
             fitterReturn <- fitter(B, y, matrixXreg);
             CFValue <- sum((y - fitterReturn$mu)^2);
+        }
+        else if(loss=="OLS"){
+            fitterReturn <- fitter(B, y, matrixXreg);
+            CFValue <- sum(abs(y - fitterReturn$mu)^2);
         }
         else{
             B <- complex(real=B[1:(length(B)/2)],imaginary=B[(length(B)/2+1):length(B)]);
@@ -528,6 +534,10 @@ clm <- function(formula, data, subset, na.action,
     if(is.null(parameters)){
         if(loss=="CLS"){
             B <- as.vector(invert(t(matrixXreg) %*% matrixXreg) %*% t(matrixXreg) %*% y);
+            CFValue <- CF(B, loss, y, matrixXreg);
+        }
+        else if(loss=="OLS"){
+            B <- as.vector(invert(t(Conj(matrixXreg)) %*% matrixXreg) %*% t(Conj(matrixXreg)) %*% y);
             CFValue <- CF(B, loss, y, matrixXreg);
         }
         else{
