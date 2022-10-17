@@ -122,7 +122,7 @@
 #' @importFrom stats formula residuals sigma
 #' @export clm
 clm <- function(formula, data, subset, na.action,
-                loss=c("CLS","OLS","likelihood","MSE","MAE","HAM"),
+                loss=c("OLS","CLS","likelihood","MSE","MAE","HAM"),
                 parameters=NULL, fast=FALSE, ...){
     # Start measuring the time of calculations
     startTime <- Sys.time();
@@ -162,7 +162,12 @@ clm <- function(formula, data, subset, na.action,
         mu[] <- matrixXreg %*% B
 
         # Get the scale value
-        scale <- sqrt(sum((y-mu)^2)/obsInsample)
+        if(loss=="CLS"){
+            scale <- sqrt(sum((y-mu)^2)/obsInsample)
+        }
+        else{
+            scale <- Re(sqrt(sum(Conj((y-mu))*(y-mu))/obsInsample));
+        }
 
         return(list(mu=mu,scale=scale));
     }
@@ -682,6 +687,12 @@ logLik.clm <- function(object, ...){
     return(structure(object$logLik,nobs=nobs(object),df=nparam(object),class="logLik"));
 }
 
+#' @importFrom stats sigma
+#' @export
+sigma.clm <- function(object, ...){
+    return(object$scale*nobs(object)/(nobs(object) - nparam(object)));
+}
+
 #' @importFrom stats vcov
 #' @export
 vcov.clm <- function(object, ...){
@@ -699,7 +710,12 @@ vcov.clm <- function(object, ...){
         matrixXreg <- matrixXreg[,-1,drop=FALSE];
     }
 
-    vcov <- invert(t(matrixXreg) %*% matrixXreg) * sigma(object)^2;
+    if(object$loss=="CLS"){
+        vcov <- invert(t(matrixXreg) %*% matrixXreg) * sigma(object)^2;
+    }
+    else if(object$loss=="OLS"){
+        vcov <- invert(t(Conj(matrixXreg)) %*% matrixXreg) * sigma(object)^2;
+    }
     rownames(vcov) <- colnames(vcov) <- variablesNames;
 
     return(vcov);

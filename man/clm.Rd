@@ -9,7 +9,7 @@ clm(
   data,
   subset,
   na.action,
-  loss = c("CLS", "likelihood", "MSE", "MAE", "HAM"),
+  loss = c("OLS", "CLS", "likelihood", "MSE", "MAE", "HAM"),
   parameters = NULL,
   fast = FALSE,
   ...
@@ -34,6 +34,8 @@ is NULL, no action. Value \link[stats]{na.exclude} can be useful.}
 \item{loss}{The type of Loss Function used in optimization. \code{loss} can
 be:
 \itemize{
+\item \code{OLS} - Ordinary Least Squares method, relying on the minimisation of
+the conjoint variance of the error term;
 \item \code{CLS} - Complex Least Squares method, relying on the minimisation of
 the complex variance of the error term;
 \item \code{likelihood} - the model is estimated via the maximisation of the
