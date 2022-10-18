@@ -4,16 +4,9 @@
 \alias{CAR}
 \title{Complex Autoregression}
 \usage{
-CAR(
-  data,
-  order = NULL,
-  max.order = frequency(data),
-  restrict = TRUE,
-  h = 13,
-  holdout = TRUE,
-  silent = TRUE,
-  ic = c("AIC", "AICc", "BIC", "BICc")
-)
+CAR(data, order = NULL, max.order = frequency(data), restrict = TRUE,
+  h = 13, holdout = TRUE, silent = TRUE, ic = c("AIC", "AICc", "BIC",
+  "BICc"))
 }
 \arguments{
 \item{data}{the pair of the time series (the matrix) in columns.}

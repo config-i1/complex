@@ -7,7 +7,8 @@
 \alias{plot.cacf}
 \title{Complex Correlation Function Estimation}
 \usage{
-cacf(x, lag.max = NULL, type = c("correlation", "covariance"), plot = TRUE)
+cacf(x, lag.max = NULL, type = c("correlation", "covariance"),
+  plot = TRUE)
 
 pcacf(x, lag.max = NULL, plot = TRUE)
 

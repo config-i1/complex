@@ -5,16 +5,8 @@
 \alias{summary.clm}
 \title{Complex Linear Model}
 \usage{
-clm(
-  formula,
-  data,
-  subset,
-  na.action,
-  loss = c("OLS", "CLS", "likelihood", "MSE", "MAE", "HAM"),
-  parameters = NULL,
-  fast = FALSE,
-  ...
-)
+clm(formula, data, subset, na.action, loss = c("OLS", "CLS", "likelihood",
+  "MSE", "MAE", "HAM"), parameters = NULL, fast = FALSE, ...)
 
 \method{summary}{clm}(object, level = 0.95, complex = TRUE, ...)
 }
