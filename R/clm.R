@@ -728,7 +728,7 @@ vcov.clm <- function(object, ...){
     matrixXreg <- complex2mat(matrixXreg);
 
     # This is equivalent to doing invert(t(Conj(matrixXreg)) %*% matrixXreg) on original complex matrix
-    vcov <- invert(t(matrixXreg) %*% matrixXreg);
+    vcov <- Re(invert(t(matrixXreg) %*% matrixXreg));
     ndimVcov <- ncol(vcov);
     sigmaValue <- sigma(object);
 
@@ -883,4 +883,165 @@ print.summary.clm <- function(x, ...){
         print(round(x$ICs,digits));
     }
     cat("\n");
+}
+
+#' @export
+plot.clm <- function(x, which=c(1,2,4,6), ...){
+    # Amend the object to make it work with legion plots
+    x$Sigma <- sigma(x);
+    x$data <- complex2vec(actuals(x));
+    x$fitted <- complex2vec(fitted(x));
+    x$residuals <- complex2vec(residuals(x));
+    x$forecast <- matrix(NA,1,2);
+    x$model <- "VES(ANN)";
+    class(x) <- "legion";
+
+    if(any(which>=12)){
+        which <- which[which<12];
+    }
+
+    plot(x, which=which, ...);
+}
+
+#' @export
+predict.clm <- function(object, newdata=NULL, interval=c("none", "confidence", "prediction"),
+                            level=0.95, side=c("both","upper","lower"), ...){
+    interval <- match.arg(interval);
+    side <- match.arg(side);
+
+    parameters <- coef(object);
+    parametersNames <- names(parameters);
+
+    nLevels <- length(level);
+    levelLow <- levelUp <- vector("numeric",nLevels);
+    if(side=="upper"){
+        levelLow[] <- 0;
+        levelUp[] <- level;
+    }
+    else if(side=="lower"){
+        levelLow[] <- 1-level;
+        levelUp[] <- 1;
+    }
+    else{
+        levelLow[] <- (1-level) / 2;
+        levelUp[] <- (1+level) / 2;
+    }
+    paramQuantiles <- qt(c(levelLow, levelUp),df=object$df.residual);
+
+    if(is.null(newdata)){
+        matrixOfxreg <- object$data;
+        newdataProvided <- FALSE;
+        # The first column is the response variable. Either substitute it by ones or remove it.
+        if(any(parametersNames=="(Intercept)")){
+            matrixOfxreg[,1] <- 1;
+        }
+        else{
+            matrixOfxreg <- matrixOfxreg[,-1,drop=FALSE];
+        }
+    }
+    else{
+        newdataProvided <- TRUE;
+
+        if(!is.data.frame(newdata)){
+            if(is.vector(newdata)){
+                newdataNames <- names(newdata);
+                newdata <- matrix(newdata, nrow=1, dimnames=list(NULL, newdataNames));
+            }
+            newdata <- as.data.frame(newdata);
+        }
+        else{
+            dataOrders <- unlist(lapply(newdata,is.ordered));
+            # If there is an ordered factor, remove the bloody ordering!
+            if(any(dataOrders)){
+                newdata[dataOrders] <- lapply(newdata[dataOrders],function(x) factor(x, levels=levels(x), ordered=FALSE));
+            }
+        }
+
+        # The gsub is needed in order to remove accidental special characters
+        colnames(newdata) <- make.names(colnames(newdata), unique=TRUE);
+
+        # Extract the formula and get rid of the response variable
+        testFormula <- formula(object);
+
+        # If the user asked for trend, but it's not in the data, add it
+        if(any(all.vars(testFormula)=="trend") && all(colnames(newdata)!="trend")){
+            newdata <- cbind(newdata,trend=nobs(object)+c(1:nrow(newdata)));
+        }
+
+        testFormula[[2]] <- NULL;
+        # Expand the data frame
+        newdataExpanded <- model.frame(testFormula, newdata);
+        interceptIsNeeded <- attr(terms(newdataExpanded),"intercept")!=0;
+
+        #### Temporary solution for model.matrix() ####
+        responseName <- all.vars(formula(object))[[1]];
+        complexVariables <- apply(newdataExpanded, 2, is.complex);
+        complexVariablesNames <- names(complexVariables)[complexVariables];
+        complexVariablesNames <- complexVariablesNames[complexVariablesNames!=responseName];
+        # Save the original data to come back to it
+        originalData <- newdataExpanded;
+        newdataExpanded[,] <- sapply(newdataExpanded[,complexVariables], Re);
+
+        # Create a model from the provided stuff. This way we can work with factors
+        matrixOfxreg <- model.matrix(newdataExpanded,data=newdataExpanded);
+        matrixOfxreg[,complexVariablesNames] <- originalData[,complexVariablesNames];
+        matrixOfxreg <- matrixOfxreg[,parametersNames,drop=FALSE];
+    }
+
+    h <- nrow(matrixOfxreg);
+
+    if(!is.matrix(matrixOfxreg)){
+        matrixOfxreg <- as.matrix(matrixOfxreg);
+        h <- nrow(matrixOfxreg);
+    }
+
+    if(h==1){
+        matrixOfxreg <- matrix(matrixOfxreg, nrow=1);
+    }
+
+    ourForecast <- as.vector(matrixOfxreg %*% parameters);
+    vectorOfVariances <- NULL;
+
+    if(interval!="none"){
+        matrixOfxreg <- complex2mat(matrixOfxreg);
+        ourVcov <- vcov(object, ...);
+        # abs is needed for some cases, when the likelihood was not fully optimised
+        vectorOfVariances <- complex2vec(diag(mat2complex(matrixOfxreg %*% ourVcov %*% t(matrixOfxreg))));
+
+        #### Confidence works somehow. Prediction doesn't.
+
+        yUpper <- yLower <- matrix(NA, h, nLevels);
+        if(interval=="confidence"){
+            for(i in 1:nLevels){
+                yLower[,i] <- ourForecast + paramQuantiles[i] * vec2complex(sqrt(vectorOfVariances));
+                yUpper[,i] <- ourForecast + paramQuantiles[i+nLevels] * vec2complex(sqrt(vectorOfVariances));
+            }
+        }
+        else if(interval=="prediction"){
+            sigmaValues <- sigma(object);
+            vectorOfVariances[] <- vectorOfVariances + sigmaValues;
+            for(i in 1:nLevels){
+                yLower[,i] <- ourForecast + paramQuantiles[i] * vec2complex(sqrt(vectorOfVariances));
+                yUpper[,i] <- ourForecast + paramQuantiles[i+nLevels] * vec2complex(sqrt(vectorOfVariances));
+            }
+        }
+
+        colnames(yLower) <- switch(side,
+                                   "both"=,
+                                   "lower"=paste0("Lower bound (",levelLow*100,"%)"),
+                                   "upper"=rep("Lower 0%",nLevels));
+
+        colnames(yUpper) <- switch(side,
+                                   "both"=,
+                                   "upper"=paste0("Upper bound (",levelUp*100,"%)"),
+                                   "lower"=rep("Upper 100%",nLevels));
+    }
+    else{
+        yLower <- NULL;
+        yUpper <- NULL;
+    }
+
+    ourModel <- list(model=object, mean=ourForecast, lower=yLower, upper=yUpper, level=c(levelLow, levelUp), newdata=newdata,
+                     variances=vectorOfVariances, newdataProvided=newdataProvided);
+    return(structure(ourModel,class="predict.clm"));
 }
