@@ -1013,13 +1013,13 @@ predict.clm <- function(object, newdata=NULL, interval=c("none", "confidence", "
         yUpper <- yLower <- matrix(NA, h, nLevels);
         if(interval=="confidence"){
             for(i in 1:nLevels){
-                yLower[,i] <- ourForecast + paramQuantiles[i] * vec2complex(sqrt(vectorOfVariances));
-                yUpper[,i] <- ourForecast + paramQuantiles[i+nLevels] * vec2complex(sqrt(vectorOfVariances));
+                yLower[,i] <- ourForecast + paramQuantiles[i] * vec2complex(sqrt(abs(vectorOfVariances)));
+                yUpper[,i] <- ourForecast + paramQuantiles[i+nLevels] * vec2complex(sqrt(abs(vectorOfVariances)));
             }
         }
         else if(interval=="prediction"){
             sigmaValues <- sigma(object);
-            vectorOfVariances[] <- vectorOfVariances + sigmaValues;
+            vectorOfVariances[] <- vectorOfVariances + matrix(diag(sigmaValues),h,2,byrow=TRUE);
             for(i in 1:nLevels){
                 yLower[,i] <- ourForecast + paramQuantiles[i] * vec2complex(sqrt(vectorOfVariances));
                 yUpper[,i] <- ourForecast + paramQuantiles[i+nLevels] * vec2complex(sqrt(vectorOfVariances));
@@ -1043,5 +1043,18 @@ predict.clm <- function(object, newdata=NULL, interval=c("none", "confidence", "
 
     ourModel <- list(model=object, mean=ourForecast, lower=yLower, upper=yUpper, level=c(levelLow, levelUp), newdata=newdata,
                      variances=vectorOfVariances, newdataProvided=newdataProvided);
-    return(structure(ourModel,class="predict.clm"));
+    return(structure(ourModel,class=c("predict.clm","predict.greybox")));
+}
+
+#' @export
+plot.predict.clm <- function(x, ...){
+    # Amend the object to make it work with legion plots
+    x$data <- complex2vec(actuals(x$model));
+    x$fitted <- complex2vec(fitted(x$model));
+    x$forecast <- complex2vec(x$mean);
+    x$PI <- complex2vec(cbind(x$lower,x$upper))[,c(1,3,2,4)];
+    x$model <- "CLM";
+    class(x) <- "legion";
+
+    plot(x, which=7, ...);
 }
