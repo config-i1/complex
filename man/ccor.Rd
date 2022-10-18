@@ -6,7 +6,7 @@
 \alias{ccor}
 \alias{ccov2cor}
 \alias{covar}
-\title{Pseudo Correlation, Variance and Covariance (Matrices)}
+\title{Correlation, Variance and Covariance (Matrices) for complex variables}
 \usage{
 cvar(x, ...)
 
@@ -34,23 +34,20 @@ in the mean (see \link[base]{mean}).}
 }
 \value{
 A scalar or a matrix with resulting complex variables.
-
-#' @references \itemize{
-\item Svetunkov, S. (2022) Complex Autoregressions. In Press.
-}
 }
 \description{
-Functions return (complex) pseudo-variance, pseudo-covariance and pseudo-correlation based on the
+Functions \code{cvar()}, \code{ccov()} and \code{ccor()} return respectively
+(complex) pseudo-variance, pseudo-covariance and pseudo-correlation based on the
 provided complex vector/matrix \code{x}. Function \code{covar()} returns the covariance
-matrix based
+matrix based on a complex vector/matrix.
 }
 \details{
-Functions calculate pseudo statistics for complex variables. Only the parametric
-pseudo-correlation is supported by the function. If \code{x} is matrix, then \code{y}
-is ignored.
+Functions \code{cvar()}, \code{ccov()} and \code{ccor()} calculate pseudo statistics
+for complex variables. Only the parametric pseudo-correlation is supported by the function.
+If \code{x} is matrix, then \code{y} is ignored.
 
 \code{covar()} function returns a covariance matrix calculated for the provided complex
-vector or matrix.
+vector or matrix \code{x}.
 }
 \examples{
 
@@ -67,6 +64,11 @@ cvar(z)
 ccor(x,y)
 ccor(z)
 
+}
+\references{
+\itemize{
+\item Svetunkov, S. & Svetunkov I. (2022) Complex Autoregressions. In Press.
+}
 }
 \seealso{
 \code{\link[stats]{cor}}

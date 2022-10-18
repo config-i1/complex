@@ -19,7 +19,9 @@
 #'
 #' There is a print and plot methods for objects of class "cacf".
 #'
-#' @author Ivan Svetunkov, \email{ivan@svetunkov.ru}
+#' @template author
+#' @template references
+#'
 #' @keywords univar
 #'
 #' @param x vector of complex variables.
@@ -36,10 +38,6 @@
 #' \item \code{type} The type of correlation (same as the type argument).
 #' \item \code{n.used} The number of observations in the time series.
 #' \item \code{series} The name of the series x.
-#' }
-#'
-#' #' @references \itemize{
-#' \item Svetunkov, S. (2022) Complex Autoregressions. In Press.
 #' }
 #'
 #' @seealso \link[stats]{acf}, \link[complex]{ccor}

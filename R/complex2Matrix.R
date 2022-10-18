@@ -18,7 +18,9 @@
 #'
 #' The function is needed to calculate some statistics for complex variables in vector form.
 #'
-#' @author Ivan Svetunkov, \email{ivan@svetunkov.ru}
+#' @template author
+#' @template references
+#'
 #' @keywords univar
 #'
 #' @param x vector or matrix of complex variables.

@@ -43,10 +43,6 @@ An object of class "cacf", which is a list with the following elements:
 \item \code{n.used} The number of observations in the time series.
 \item \code{series} The name of the series x.
 }
-
-#' @references \itemize{
-\item Svetunkov, S. (2022) Complex Autoregressions. In Press.
-}
 }
 \description{
 The functions compute (and by default plot) estimates of the Complex Autocovariance,
@@ -77,6 +73,11 @@ x <- complex(real=rnorm(100,10,10), imaginary=rnorm(100,10,10))
 # Calculate CACF
 cacf(x)
 
+}
+\references{
+\itemize{
+\item Svetunkov, S. & Svetunkov I. (2022) Complex Autoregressions. In Press.
+}
 }
 \seealso{
 \link[stats]{acf}, \link[complex]{ccor}

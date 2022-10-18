@@ -13,7 +13,9 @@
 #' [ a_{j,2} |  a_{j,1} ]
 #' }
 #'
-#' @author Ivan Svetunkov, \email{ivan@svetunkov.ru}
+#' @template author
+#' @template references
+#'
 #' @keywords univar ts models regression
 #'
 #' @param data the pair of the time series (the matrix) in columns.

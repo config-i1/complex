@@ -60,6 +60,11 @@ complex2mat(x)
 complex2vec(x)
 
 }
+\references{
+\itemize{
+\item Svetunkov, S. & Svetunkov I. (2022) Complex Autoregressions. In Press.
+}
+}
 \seealso{
 \code{\link[complex]{clm}}
 }

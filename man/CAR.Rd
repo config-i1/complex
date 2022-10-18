@@ -77,6 +77,11 @@ CARModel <- CAR(Y,h=10,holdout=TRUE)
 
 
 }
+\references{
+\itemize{
+\item Svetunkov, S. & Svetunkov I. (2022) Complex Autoregressions. In Press.
+}
+}
 \seealso{
 \code{\link[legion]{ves}}
 }
