@@ -2,6 +2,7 @@
 % Please edit documentation in R/clm.R
 \name{clm}
 \alias{clm}
+\alias{summary.clm}
 \title{Complex Linear Model}
 \usage{
 clm(
@@ -14,6 +15,8 @@ clm(
   fast = FALSE,
   ...
 )
+
+\method{summary}{clm}(object, level = 0.95, complex = TRUE, ...)
 }
 \arguments{
 \item{formula}{an object of class "formula" (or one that can be coerced to
@@ -88,6 +91,12 @@ If equal to 41, then the detailed results of the optimisation are returned.
 }
 You can read more about these parameters by running the function
 \link[nloptr]{nloptr.print.options}.}
+
+\item{object}{Object of class "clm" estimated via \code{clm()} function.}
+
+\item{level}{What confidence level to use for the parameters of the model.}
+
+\item{complex}{Boolean. If TRUE, the output will contain complex parameters.}
 }
 \value{
 Function returns \code{model} - the final model of the class

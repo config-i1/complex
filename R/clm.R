@@ -120,6 +120,7 @@
 #' @importFrom nloptr nloptr
 #' @importFrom stats model.frame sd terms model.matrix update.formula as.formula
 #' @importFrom stats formula residuals sigma
+#' @rdname clm
 #' @export clm
 clm <- function(formula, data, subset, na.action,
                 loss=c("OLS","CLS","likelihood","MSE","MAE","HAM"),
@@ -699,9 +700,10 @@ logLik.clm <- function(object, ...){
 #' @importFrom stats sigma
 #' @export
 sigma.clm <- function(object, ...){
-    complexVector <- complex2vec(resid(object));
-    return(t(complexVector) %*% complexVector / (nobs(object) - nparam(object)));
+    # complexVector <- complex2vec(resid(object));
+    # return(t(complexVector) %*% complexVector / (nobs(object) - nparam(object)));
     # return(object$scale*nobs(object)/(nobs(object) - nparam(object)));
+    return(covar(resid(object), df=nobs(object)-nparam(object)));
 }
 
 #' @importFrom stats vcov
@@ -748,7 +750,9 @@ vcov.clm <- function(object, ...){
     return(vcov);
 }
 
-confint.clm <- function(object, parm, level = 0.95, ...){
+#' @importFrom stats resid qt
+#' @export
+confint.clm <- function(object, parm, level = 0.95, complex=TRUE, ...){
 
     confintNames <- c(paste0((1-level)/2*100,"%"),
                       paste0((1+level)/2*100,"%"));
@@ -780,24 +784,49 @@ confint.clm <- function(object, parm, level = 0.95, ...){
 
 #' @importFrom stats coef confint
 #' @importFrom greybox nparam
+#' @rdname clm
+#' @param object Object of class "clm" estimated via \code{clm()} function.
+#' @param level What confidence level to use for the parameters of the model.
+#' @param complex Boolean. If TRUE, the output will contain complex parameters.
 #' @export
-summary.clm <- function(object, level=0.95, bootstrap=FALSE, ...){
+summary.clm <- function(object, level=0.95, complex=TRUE, ...){
+    bootstrap <- FALSE;
     errors <- residuals(object);
     obs <- nobs(object, all=TRUE);
 
     # Collect parameters and their standard errors
     parametersConfint <- confint(object, level=level, bootstrap=bootstrap, ...);
     parameters <- coef(object);
+    parametersLength <- length(parameters);
     parametersTable <- cbind(parameters,parametersConfint);
-    rownames(parametersTable) <- names(parameters);
-    colnames(parametersTable) <- c("Estimate","Std. Error",
-                                   paste0("Lower ",(1-level)/2*100,"%"),
-                                   paste0("Upper ",(1+level)/2*100,"%"));
+    parametersTableColnames <- c("Estimate","Std. Error",
+                                 paste0("Lower ",(1-level)/2*100,"%"),
+                                 paste0("Upper ",(1+level)/2*100,"%"));
+    parametersTableRownames <- names(parameters)
+    rownames(parametersTable) <- parametersTableRownames;
+    colnames(parametersTable) <- parametersTableColnames;
+
+    # If the user asked for non-complex summary, do the thing
+    if(!complex){
+        parametersTable <- complex2vec(parametersTable);
+        # Stack things below each other
+        parametersTable <- Re(rbind(parametersTable[,(1:4)*2-1,drop=FALSE],
+                                    parametersTable[,(1:4)*2,drop=FALSE]));
+        parametersTable[] <- parametersTable[c((1:parametersLength)*2-1,(1:parametersLength)*2),];
+        colnames(parametersTable) <- parametersTableColnames;
+        rownames(parametersTable) <- paste0(rep(parametersTableRownames,each=2),c("_r","_i"));
+        parametersLength <- nrow(parametersTable);
+    }
     ourReturn <- list(coefficients=parametersTable);
+
     # Mark those that are significant on the selected level
-    # ourReturn$significance <- !(abs(parametersTable[,3])<=0 & abs(parametersTable[,4])>=0);
-    #### It's not clear what significance means in case of complex numbers! So, switch it off
-    ourReturn$significance <- rep(FALSE, length(parameters));
+    if(!complex){
+        ourReturn$significance <- !(abs(parametersTable[,3])<=0 & abs(parametersTable[,4])>=0);
+    }
+    else{
+        #### It's not clear what significance means in case of complex numbers! So, switch it off
+        ourReturn$significance <- rep(FALSE, parametersLength);
+    }
 
     # If there is a likelihood, then produce ICs
     if(!is.na(logLik(object))){
@@ -833,6 +862,7 @@ print.summary.clm <- function(x, ...){
         digits <- ellipsis$digits;
     }
 
+    cat("Complex Linear Regression estimated via clm()\n");
     cat(paste0("Response variable: ", paste0(x$responseName,collapse="")));
     cat(paste0("\nLoss function used in estimation: ",x$loss));
 

@@ -5,6 +5,7 @@
 \alias{ccov}
 \alias{ccor}
 \alias{ccov2cor}
+\alias{covar}
 \title{Pseudo Correlation, Variance and Covariance (Matrices)}
 \usage{
 cvar(x, ...)
@@ -14,6 +15,8 @@ ccov(x, y, ...)
 ccor(x, y, ...)
 
 ccov2cor(V)
+
+covar(x, df = NULL)
 }
 \arguments{
 \item{x}{vector or matrix of complex variables. If it is matrix then the
@@ -26,6 +29,8 @@ in the mean (see \link[base]{mean}).}
 \item{y}{second vector to calculate pseudo-covariance or pseudo-correlations with.}
 
 \item{V}{complex pseudo-covariance matrix.}
+
+\item{df}{Number of degrees of freedom to use in the calculation of the covariance matrix.}
 }
 \value{
 A scalar or a matrix with resulting complex variables.
@@ -36,12 +41,16 @@ A scalar or a matrix with resulting complex variables.
 }
 \description{
 Functions return (complex) pseudo-variance, pseudo-covariance and pseudo-correlation based on the
-provided complex vector/matrix \code{x}.
+provided complex vector/matrix \code{x}. Function \code{covar()} returns the covariance
+matrix based
 }
 \details{
 Functions calculate pseudo statistics for complex variables. Only the parametric
 pseudo-correlation is supported by the function. If \code{x} is matrix, then \code{y}
 is ignored.
+
+\code{covar()} function returns a covariance matrix calculated for the provided complex
+vector or matrix.
 }
 \examples{
 
