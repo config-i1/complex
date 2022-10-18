@@ -5,7 +5,7 @@
 \alias{complex2vec}
 \alias{mat2complex}
 \alias{vec2complex}
-\title{Functions construct matrices from complex variables}
+\title{Functions to manipulate complex variables and matrices}
 \usage{
 complex2mat(x)
 

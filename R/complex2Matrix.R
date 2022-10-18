@@ -1,4 +1,4 @@
-#' Functions construct matrices from complex variables
+#' Functions to manipulate complex variables and matrices
 #'
 #' \code{complex2mat()} constructs a matrix from the provided complex variable,
 #' while \code{complex2vec()} returns a vector (in mathematical sense), both of them
@@ -55,11 +55,11 @@ complex2mat <- function(x){
         ncolX <- ncol(x);
         rownamesX <- rownames(x);
         if(!is.null(rownamesX)){
-            rownamesX <- paste0(rep(rownames(x),each=2), c("_r","_i"));
+            rownamesX <- paste0(rep(rownamesX,each=2), c("_r","_i"));
         }
         colnamesX <- colnames(x);
         if(!is.null(colnamesX)){
-            paste0(rep(colnames(x),each=2), c("_r","_i"));
+            colnamesX <- paste0(rep(colnamesX,each=2), c("_r","_i"));
         }
     }
     else{
@@ -67,7 +67,7 @@ complex2mat <- function(x){
         ncolX <- 1;
         rownamesX <- names(x);
         if(!is.null(rownamesX)){
-            rownamesX <- paste0(rep(names(x),each=2), c("_r","_i"));
+            rownamesX <- paste0(rep(rownamesX,each=2), c("_r","_i"));
         }
         colnamesX <- c("x_r", "x_i");
         x <- as.matrix(x);
@@ -94,8 +94,8 @@ complex2vec <- function(x){
         ncolX <- ncol(x);
         rownamesX <- rownames(x);
         colnamesX <- colnames(x);
-        if(!is.null(colnames(x))){
-            colnamesX <- paste0(rep(colnames(x),each=2), c("_r","_i"));
+        if(!is.null(colnamesX)){
+            colnamesX <- paste0(rep(colnamesX,each=2), c("_r","_i"));
         }
     }
     else{
