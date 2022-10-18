@@ -681,6 +681,15 @@ nobs.clm <- function(object, all=TRUE, ...){
     return(length(actuals(object, ...)));
 }
 
+#' @importFrom greybox nparam
+#' @export
+nparam.clm <- function(object, all=TRUE, ...){
+    x <- c(Re(coef(object)),Im(coef(object)));
+    x <- x[x!=0];
+    # Divide by two, because we calculate df per series
+    return(length(x)/2);
+}
+
 #' @importFrom stats logLik
 #' @export
 logLik.clm <- function(object, ...){
@@ -690,7 +699,9 @@ logLik.clm <- function(object, ...){
 #' @importFrom stats sigma
 #' @export
 sigma.clm <- function(object, ...){
-    return(object$scale*nobs(object)/(nobs(object) - nparam(object)));
+    complexVector <- complex2vec(resid(object));
+    return(t(complexVector) %*% complexVector / (nobs(object) - nparam(object)));
+    # return(object$scale*nobs(object)/(nobs(object) - nparam(object)));
 }
 
 #' @importFrom stats vcov
@@ -710,15 +721,60 @@ vcov.clm <- function(object, ...){
         matrixXreg <- matrixXreg[,-1,drop=FALSE];
     }
 
-    if(object$loss=="CLS"){
-        vcov <- invert(t(matrixXreg) %*% matrixXreg) * sigma(object)^2;
+    # Transform the matrix to be a matrix
+    matrixXreg <- complex2mat(matrixXreg);
+
+    vcov <- invert(t(matrixXreg) %*% matrixXreg);
+    ndimVcov <- ncol(vcov);
+    sigmaValue <- sigma(object);
+
+    if(any(object$loss==c("CLS","OLS"))){
+        for(i in 1:(ndimVcov/2)){
+            for(j in 1:(ndimVcov/2)){
+                vcov[(1:2)+(i-1)*2,(1:2)+(j-1)*2] <- vcov[(1:2)+(i-1)*2,(1:2)+(j-1)*2] * sigmaValue;
+            }
+        }
     }
-    else if(object$loss=="OLS"){
-        vcov <- invert(t(Conj(matrixXreg)) %*% matrixXreg) * sigma(object)^2;
-    }
-    rownames(vcov) <- colnames(vcov) <- variablesNames;
+
+    # if(object$loss=="CLS"){
+    #     vcov <- invert(t(matrixXreg) %*% matrixXreg) * sigma(object)^2;
+    # }
+    # else if(object$loss=="OLS"){
+    #     vcov <- invert(t(Conj(matrixXreg)) %*% matrixXreg) * sigma(object)^2;
+    # }
+    # rownames(vcov) <- colnames(vcov) <- variablesNames;
 
     return(vcov);
+}
+
+confint.clm <- function(object, parm, level = 0.95, ...){
+
+    confintNames <- c(paste0((1-level)/2*100,"%"),
+                      paste0((1+level)/2*100,"%"));
+
+    # Extract coefficients
+    parameters <- coef(object);
+    parametersNames <- names(parameters);
+    # Get complex variance
+    parametersSE <- sqrt(diag(vcov(object)));
+    varLength <- length(parametersSE);
+    parametersSE <- complex(real=parametersSE[1:(varLength/2)*2-1],imaginary=parametersSE[1:(varLength/2)*2]);
+
+    # Define quantiles using Student distribution
+    paramQuantiles <- qt((1+level)/2,df=object$df.residual);
+
+    # We can use normal distribution, because of the asymptotics of MLE
+    confintValues <- cbind(parameters-paramQuantiles*parametersSE,
+                           parameters+paramQuantiles*parametersSE);
+    colnames(confintValues) <- confintNames;
+
+    # Return S.E. as well, so not to repeat the thing twice...
+    confintValues <- cbind(parametersSE, confintValues);
+    # Give the name to the first column
+    colnames(confintValues)[1] <- "S.E.";
+    rownames(confintValues) <- parametersNames;
+
+    return(confintValues);
 }
 
 #' @importFrom stats coef confint
@@ -731,7 +787,7 @@ summary.clm <- function(object, level=0.95, bootstrap=FALSE, ...){
     # Collect parameters and their standard errors
     parametersConfint <- confint(object, level=level, bootstrap=bootstrap, ...);
     parameters <- coef(object);
-    parametersTable <- cbind(parameters,sqrt(diag(vcov(object))),parametersConfint);
+    parametersTable <- cbind(parameters,parametersConfint);
     rownames(parametersTable) <- names(parameters);
     colnames(parametersTable) <- c("Estimate","Std. Error",
                                    paste0("Lower ",(1-level)/2*100,"%"),
@@ -786,7 +842,7 @@ print.summary.clm <- function(x, ...){
     print(data.frame(round(x$coefficients,digits),stars,
                      check.names=FALSE,fix.empty.names=FALSE));
 
-    cat("\nError standard deviation: "); cat(round(sqrt(x$s2),digits));
+    cat("\nError covariance matrix:\n"); print(round(x$s2,digits));
     cat("\nSample size: "); cat(x$dfTable[1]);
     cat("\nNumber of estimated parameters: "); cat(x$dfTable[2]);
     cat("\nNumber of degrees of freedom: "); cat(x$dfTable[3]);
