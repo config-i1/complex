@@ -3,11 +3,17 @@
 \name{complex2mat}
 \alias{complex2mat}
 \alias{complex2vec}
+\alias{mat2complex}
+\alias{vec2complex}
 \title{Functions construct matrices from complex variables}
 \usage{
 complex2mat(x)
 
 complex2vec(x)
+
+mat2complex(x)
+
+vec2complex(x)
 }
 \arguments{
 \item{x}{vector or matrix of complex variables.}
@@ -23,7 +29,8 @@ of \code{complex2mat()}).
 \description{
 \code{complex2mat()} constructs a matrix from the provided complex variable,
 while \code{complex2vec()} returns a vector (in mathematical sense), both of them
-split the real and imaginary parts. See details for explanation.
+split the real and imaginary parts. \code{mat2complex()} and \code{vec2complex()} do
+the reverse of the respective functions. See details for explanation.
 }
 \details{
 Complex variable x + iy can be represented as a vector (x y)' or as a matrix:
@@ -33,6 +40,9 @@ Complex variable x + iy can be represented as a vector (x y)' or as a matrix:
 \code{complex2mat()} returns the latter, while \code{complex2vec()} returns the
 former. If a user provides a vector of complex variables, the values are stacked above
 each other. If a matrix is provided, a higher dimensional matrix is returned.
+
+\code{mat2complex()} and \code{vec2complex()} return complex variables based on provided
+matrix.
 
 The function is needed to calculate some statistics for complex variables in vector form.
 }

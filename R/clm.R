@@ -724,6 +724,7 @@ vcov.clm <- function(object, ...){
     # Transform the matrix to be a matrix
     matrixXreg <- complex2mat(matrixXreg);
 
+    # This is equivalent to doing invert(t(Conj(matrixXreg)) %*% matrixXreg) on original complex matrix
     vcov <- invert(t(matrixXreg) %*% matrixXreg);
     ndimVcov <- ncol(vcov);
     sigmaValue <- sigma(object);
