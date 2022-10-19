@@ -1052,7 +1052,9 @@ plot.predict.clm <- function(x, ...){
     x$data <- complex2vec(actuals(x$model));
     x$fitted <- complex2vec(fitted(x$model));
     x$forecast <- complex2vec(x$mean);
-    x$PI <- complex2vec(cbind(x$lower,x$upper))[,c(1,3,2,4)];
+    if(!is.null(x$lower)){
+        x$PI <- complex2vec(cbind(x$lower,x$upper))[,c(1,3,2,4)];
+    }
     x$model <- "CLM";
     class(x) <- "legion";
 
