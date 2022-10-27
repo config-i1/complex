@@ -187,10 +187,13 @@ clm <- function(formula, data, subset, na.action,
     CF <- function(B, loss, y, matrixXreg){
 
         if(loss=="likelihood"){
-            # The original log-likelilhood
-            #### !!! Needs to be modified for complex case !!! ####
-            # CFValue <- -sum("dnorm" = dnorm(y, mean=fitterReturn$mu, sd=fitterReturn$scale, log=TRUE));
-            CFValue <- NA;
+            B <- complex(real=B[1:(nVariables/2)],imaginary=B[(nVariables/2+1):nVariables]);
+            fitterReturn <- fitter(B, y, matrixXreg);
+            errors <- complex2vec(y - fitterReturn$mu);
+            sigmaMat <- covar(errors, df=obsInsample);
+            # Concentrated logLik
+            CFValue <- obsInsample*(log(2*pi) + 1 + 0.5*log(det(sigmaMat)));
+            # CFValue <- obsInsample*(log(2*pi) + 0.5*log(det(sigmaMat))) + 0.5*sum(errors %*% Re(invert(sigmaMat)) %*% t(errors));
         }
         else if(loss=="CLS"){
             fitterReturn <- fitter(B, y, matrixXreg);
@@ -201,7 +204,7 @@ clm <- function(formula, data, subset, na.action,
             CFValue <- sum(abs(y - fitterReturn$mu)^2);
         }
         else{
-            B <- complex(real=B[1:(length(B)/2)],imaginary=B[(length(B)/2+1):length(B)]);
+            B <- complex(real=B[1:(nVariables/2)],imaginary=B[(nVariables/2+1):nVariables]);
             fitterReturn <- fitter(B, y, matrixXreg);
             yFitted[] <- extractorFitted(fitterReturn$mu, fitterReturn$scale);
 
@@ -277,10 +280,6 @@ clm <- function(formula, data, subset, na.action,
     }
     if(is.null(ellipsis$ftol_rel)){
         ftol_rel <- 1E-4;
-        # LASSO / RIDGE need more accurate estimation
-        if(any(loss==c("LASSO","RIDGE"))){
-            ftol_rel <- 1e-8;
-        }
     }
     else{
         ftol_rel <- ellipsis$ftol_rel;
@@ -552,12 +551,13 @@ clm <- function(formula, data, subset, na.action,
             BLower <- NULL;
             BUpper <- NULL;
             if(is.null(B)){
-                B <- as.vector(invert(t(matrixXreg) %*% matrixXreg) %*% t(matrixXreg) %*% y);
+                B <- as.vector(invert(t(Conj(matrixXreg)) %*% matrixXreg) %*% t(Conj(matrixXreg)) %*% y);
                 B <- c(Re(B),Im(B));
             }
+            nVariables <- length(B);
 
-            BLower <- rep(-Inf,length(B));
-            BUpper <- rep(Inf,length(B));
+            BLower <- rep(-Inf,nVariables);
+            BUpper <- rep(Inf,nVariables);
 
             print_level_hidden <- print_level;
             if(print_level==41){
@@ -566,7 +566,7 @@ clm <- function(formula, data, subset, na.action,
 
             #### Define what to do with the maxeval ####
             if(is.null(ellipsis$maxeval)){
-                maxeval <- length(B) * 40;
+                maxeval <- nVariables * 40;
             }
             else{
                 maxeval <- ellipsis$maxeval;
@@ -579,7 +579,8 @@ clm <- function(formula, data, subset, na.action,
                           # lb=BLower, ub=BUpper,
                           loss=loss, y=y, matrixXreg=matrixXreg);
             B[] <- res$solution;
-            B <- complex(real=B[1:(length(B)/2)],imaginary=B[(length(B)/2+1):length(B)]);
+            B <- complex(real=B[1:(nVariables/2)],imaginary=B[(nVariables/2+1):nVariables]);
+            nVariables <- length(B);
             CFValue <- res$objective;
 
             if(print_level_hidden>0){
@@ -635,7 +636,7 @@ clm <- function(formula, data, subset, na.action,
     ### Error term in the transformed scale
     errors[] <- extractorResiduals(mu, yFitted);
 
-    nParam <- nVariables + (loss=="likelihood")*1;
+    nParam <- nVariables + (loss=="likelihood")*3/2;
 
     if(interceptIsNeeded){
         # This shit is needed, because R has habit of converting everything into vectors...
@@ -686,10 +687,11 @@ nobs.clm <- function(object, all=TRUE, ...){
 #' @importFrom greybox nparam
 #' @export
 nparam.clm <- function(object, all=TRUE, ...){
-    x <- c(Re(coef(object)),Im(coef(object)));
-    x <- x[x!=0];
-    # Divide by two, because we calculate df per series
-    return(length(x)/2);
+    return(object$rank);
+    # x <- c(Re(coef(object)),Im(coef(object)));
+    # x <- x[x!=0];
+    # # Divide by two, because we calculate df per series
+    # return(length(x)/2);
 }
 
 #' @importFrom stats logLik
