@@ -1,13 +1,12 @@
 #' Correlation, Variance and Covariance (Matrices) for complex variables
 #'
 #' Functions \code{cvar()}, \code{ccov()} and \code{ccor()} return respectively
-#' (complex) pseudo-variance, pseudo-covariance and pseudo-correlation based on the
+#' complex variance, covariance and correlation based on the
 #' provided complex vector/matrix \code{x}. Function \code{covar()} returns the covariance
 #' matrix based on a complex vector/matrix.
 #'
-#' Functions \code{cvar()}, \code{ccov()} and \code{ccor()} calculate pseudo statistics
-#' for complex variables. Only the parametric pseudo-correlation is supported by the function.
-#' If \code{x} is matrix, then \code{y} is ignored.
+#' Only the parametric correlation is supported by the function. If \code{x}
+#' is matrix, then \code{y} is ignored.
 #'
 #' \code{covar()} function returns a covariance matrix calculated for the provided complex
 #' vector or matrix \code{x}.
@@ -19,6 +18,9 @@
 #'
 #' @param x vector or matrix of complex variables. If it is matrix then the
 #' variable \code{y} is ignored.
+#' @param type type of measure to calculate. \code{"conjugate"} means that it is based
+#' on the multiplication by conjugate number. \code{"direct"} means the calculation
+#' without the conjugate (i.e. "pseudo" moment).
 #' @param y second vector to calculate pseudo-covariance or pseudo-correlations with.
 #' @param ... parameters passed to \code{mean()} functions. For example, this can be
 #' \code{na.rm=TRUE} to remove missing values or \code{trim} to define the trimming
@@ -45,39 +47,66 @@
 #'
 #' @rdname ccor
 #' @export
-cvar <- function(x, ...){
-    if(is.matrix(x)){
-        xMeans <- matrix(colMeans(x, ...),nrow(x),ncol(x),byrow=TRUE);
-        return(t(x-xMeans) %*% (x-xMeans));
+cvar <- function(x, type=c("direct","conjugate"),
+                 ...){
+    type <- match.arg(type);
+    if(type=="direct"){
+        if(is.matrix(x)){
+            xMeans <- matrix(colMeans(x, ...),nrow(x),ncol(x),byrow=TRUE);
+            return(t(x-xMeans) %*% (x-xMeans));
+        }
+        else{
+            return(mean((x-mean(x, ...))^2, ...));
+        }
     }
     else{
-        return(mean((x-mean(x, ...))^2, ...));
+        if(is.matrix(x)){
+            xMeans <- matrix(colMeans(x, ...),nrow(x),ncol(x),byrow=TRUE);
+            return(t(x-xMeans) %*% Conj(x-xMeans));
+        }
+        else{
+            return(mean((x-mean(x, ...)) * Conj(x-mean(x, ...)), ...));
+        }
     }
 }
 
 #' @rdname ccor
 #' @export
-ccov <- function(x, y, ...){
-    if(is.matrix(x)){
-        return(cvar(x, ...));
+ccov <- function(x, y, type=c("direct","conjugate"),
+                 ...){
+    type <- match.arg(type);
+    if(type=="direct"){
+        if(is.matrix(x)){
+            return(cvar(x, type=type, ...));
+        }
+        else{
+            return(mean((x-mean(x, ...))*(y-mean(y, ...)), ...));
+        }
     }
     else{
-        return(mean((x-mean(x, ...))*(y-mean(y, ...)), ...))
+        if(is.matrix(x)){
+            return(cvar(x, type=type, ...));
+        }
+        else{
+            return(mean((x-mean(x, ...))*Conj(y-mean(y, ...)), ...));
+        }
     }
 }
 
 #' @rdname ccor
 #' @export
-ccor <- function(x, y, ...){
+ccor <- function(x, y, type=c("direct","conjugate"),
+                 ...){
+    type <- match.arg(type);
     if(is.matrix(x)){
-        ccov2cor(cvar(x, ...));
+        ccov2cor(cvar(x, type=type, ...));
     }
     else{
-        return(ccov(x, y, ...) / sqrt(cvar(x, ...)*cvar(y, ...)));
+        return(ccov(x, y, type=type, ...) / sqrt(cvar(x, type=type, ...)*cvar(y, type=type, ...)));
     }
 }
 
-#' @param V complex pseudo-covariance matrix.
+#' @param V complex (pseudo)covariance matrix.
 #' @rdname ccor
 #' @export
 ccov2cor <- function(V){

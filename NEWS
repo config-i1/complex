@@ -1,4 +1,4 @@
-complex v0.0.2 (Release data: 2022-10-27)
+complex v0.0.2 (Release data: 2022-11-22)
 ==============
 
 Changes:
@@ -12,6 +12,7 @@ Changes:
 * summary.clm() now has an option to produce real-valued parameters via complex=FALSE.
 * predict.clm() with proper prediction and confidence intervals and plot.predict.clm().
 * Likelihood estimation in clm().
+* direct/conjugate moments in cvar() et al.
 
 
 complex v0.0.1 (Release data: 2019-07-01)

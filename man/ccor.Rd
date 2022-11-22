@@ -8,11 +8,11 @@
 \alias{covar}
 \title{Correlation, Variance and Covariance (Matrices) for complex variables}
 \usage{
-cvar(x, ...)
+cvar(x, type = c("direct", "conjugate"), ...)
 
-ccov(x, y, ...)
+ccov(x, y, type = c("direct", "conjugate"), ...)
 
-ccor(x, y, ...)
+ccor(x, y, type = c("direct", "conjugate"), ...)
 
 ccov2cor(V)
 
@@ -22,13 +22,17 @@ covar(x, df = NULL)
 \item{x}{vector or matrix of complex variables. If it is matrix then the
 variable \code{y} is ignored.}
 
+\item{type}{type of measure to calculate. \code{"conjugate"} means that it is based
+on the multiplication by conjugate number. \code{"direct"} means the calculation
+without the conjugate (i.e. "pseudo" moment).}
+
 \item{...}{parameters passed to \code{mean()} functions. For example, this can be
 \code{na.rm=TRUE} to remove missing values or \code{trim} to define the trimming
 in the mean (see \link[base]{mean}).}
 
 \item{y}{second vector to calculate pseudo-covariance or pseudo-correlations with.}
 
-\item{V}{complex pseudo-covariance matrix.}
+\item{V}{complex (pseudo)covariance matrix.}
 
 \item{df}{Number of degrees of freedom to use in the calculation of the covariance matrix.}
 }
@@ -37,14 +41,13 @@ A scalar or a matrix with resulting complex variables.
 }
 \description{
 Functions \code{cvar()}, \code{ccov()} and \code{ccor()} return respectively
-(complex) pseudo-variance, pseudo-covariance and pseudo-correlation based on the
+complex variance, covariance and correlation based on the
 provided complex vector/matrix \code{x}. Function \code{covar()} returns the covariance
 matrix based on a complex vector/matrix.
 }
 \details{
-Functions \code{cvar()}, \code{ccov()} and \code{ccor()} calculate pseudo statistics
-for complex variables. Only the parametric pseudo-correlation is supported by the function.
-If \code{x} is matrix, then \code{y} is ignored.
+Only the parametric correlation is supported by the function. If \code{x}
+is matrix, then \code{y} is ignored.
 
 \code{covar()} function returns a covariance matrix calculated for the provided complex
 vector or matrix \code{x}.

@@ -7,10 +7,10 @@
 \alias{plot.cacf}
 \title{Complex Correlation Function Estimation}
 \usage{
-cacf(x, lag.max = NULL, type = c("correlation", "covariance"),
-  plot = TRUE)
+cacf(x, lag.max = NULL, type = c("direct", "conjugate"),
+  kind = c("correlation", "covariance"), plot = TRUE)
 
-pcacf(x, lag.max = NULL, plot = TRUE)
+pcacf(x, lag.max = NULL, type = c("direct", "conjugate"), plot = TRUE)
 
 \method{print}{cacf}(x, ...)
 
@@ -21,7 +21,11 @@ pcacf(x, lag.max = NULL, plot = TRUE)
 
 \item{lag.max}{maximum number of lags. See \link[stats]{acf} for more details.}
 
-\item{type}{character string giving the type of CACF to be computed. Allowed values
+\item{type}{type of measure to calculate. \code{"conjugate"} means that it is based
+on the multiplication by conjugate number. \code{"direct"} means the calculation
+without the conjugate (i.e. "pseudo" moment).}
+
+\item{kind}{character string giving the kind of CACF to be computed. Allowed values
 are "correlation" (the default) and "covariance". Will be partially matched.}
 
 \item{plot}{logical. If \code{TRUE} (the default) the CACF is plotted on complex plane
@@ -39,7 +43,8 @@ An object of class "cacf", which is a list with the following elements:
 \itemize{
 \item \code{lag} A three dimensional array containing the lags at which the CACF is estimated.
 \item \code{acf} An array with the same dimensions as lag containing the estimated CACF.
-\item \code{type} The type of correlation (same as the type argument).
+\item \code{type} The type of moment used in calculation (same as the type argument).
+\item \code{kind} The kind of correlation (same as the kind argument).
 \item \code{n.used} The number of observations in the time series.
 \item \code{series} The name of the series x.
 }
@@ -49,7 +54,7 @@ The functions compute (and by default plot) estimates of the Complex Autocovaria
 or Complex Autocorrelation, or Partial Complex Autocorrelation functions.
 }
 \details{
-For \code{type="correlation"} and \code{"covariance"}, the estimates are based
+For \code{kind="correlation"} and \code{"covariance"}, the estimates are based
 on the sample pseudo covariance and use pseudo correlation \link[complex]{ccor} and complex
 covariance \link[complex]{ccov} respectively. Note that the function does not calculate values for
 lag 0. Also, the function will automatically remove NAs. Finally, function does not have
