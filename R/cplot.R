@@ -48,7 +48,7 @@ cplot <- function(x, y){
 
     nColours <- min(1000,obs);
     nColoursTimes <- floor(obs/nColours);
-    colours <- rep(palette(grey(seq(0.9, 0.1, len=nColours))), each=nColoursTimes);
+    colours <- rep(grey(seq(0.9, 0.1, len=nColours)), each=nColoursTimes);
     omaValues <- c(5,5,2,2);
 
     par(mfcol=c(3,3), mar=rep(0,4), oma=omaValues, xaxt="s",yaxt="s",cex.main=1.5);
