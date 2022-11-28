@@ -26,6 +26,9 @@
 #'
 #' @param x vector of complex variables.
 #' @param lag.max maximum number of lags. See \link[stats]{acf} for more details.
+#' @param kind type of measure to calculate. \code{"conjugate"} means that it is based
+#' on the multiplication by conjugate number. \code{"direct"} means the calculation
+#' without the conjugate (i.e. "pseudo" moment).
 #' @param type character string giving the type of CACF to be computed. Allowed values
 #' are "correlation" (the default) and "covariance". Will be partially matched.
 #' @param plot logical. If \code{TRUE} (the default) the CACF is plotted on complex plane
@@ -35,6 +38,7 @@
 #' \itemize{
 #' \item \code{lag} A three dimensional array containing the lags at which the CACF is estimated.
 #' \item \code{acf} An array with the same dimensions as lag containing the estimated CACF.
+#' \item \code{kind} The kind of moment used in calculation (same as the kind argument).
 #' \item \code{type} The type of correlation (same as the type argument).
 #' \item \code{n.used} The number of observations in the time series.
 #' \item \code{series} The name of the series x.
@@ -53,11 +57,18 @@
 #' @rdname CACF
 #' @importFrom greybox xregExpander
 #' @export
-cacf <- function(x, lag.max=NULL, type=c("correlation","covariance"),
+cacf <- function(x, lag.max=NULL, kind=c("direct","conjugate"),
+                 type=c("correlation","covariance","partial"),
                  plot=TRUE){
     # Function is based on acf() from stats
 
+    kind <- match.arg(kind);
     type <- match.arg(type);
+
+    if(type=="partial"){
+        return(pcacf(x=x, lag.max=lag.max, plot=plot, kind=kind));
+    }
+
     series <- deparse1(substitute(x))
 
     obs <- length(x);
@@ -75,11 +86,11 @@ cacf <- function(x, lag.max=NULL, type=c("correlation","covariance"),
 
     for(i in 1:lag.max){
         xACF[i] <- switch(type,
-                          "covariance"=ccov(xLagged[,1], xLagged[,i+1], na.rm=TRUE),
-                          "correlation"=ccor(xLagged[,1], xLagged[,i+1], na.rm=TRUE));
+                          "covariance"=ccov(xLagged[,1], xLagged[,i+1], kind=kind, na.rm=TRUE),
+                          "correlation"=ccor(xLagged[,1], xLagged[,i+1], kind=kind, na.rm=TRUE));
     }
 
-    acf.out <- structure(list(acf=xACF, type=type, n.used=obs,
+    acf.out <- structure(list(acf=xACF, kind=kind, type=type, n.used=obs,
                               lag=c(1:lag.max), series=series), class="cacf");
 
     if(plot){
@@ -93,9 +104,11 @@ cacf <- function(x, lag.max=NULL, type=c("correlation","covariance"),
 
 #' @rdname CACF
 #' @export
-pcacf <- function(x, lag.max=NULL, plot=TRUE){
+pcacf <- function(x, lag.max=NULL, kind=c("direct","conjugate"),
+                  plot=TRUE){
     # Function is based on acf() from stats
 
+    kind <- match.arg(kind);
     series <- deparse1(substitute(x))
 
     obs <- length(x);
@@ -116,13 +129,22 @@ pcacf <- function(x, lag.max=NULL, plot=TRUE){
     i <- 1
 
     # Extract estimated parameters of the complex regression
-    for(i in 1:lag.max){
-        xPACF[i] <- (invert(t(xLagged[-c(1:i),1:(i+1),drop=FALSE]) %*% xLagged[-c(1:i),1:(i+1),drop=FALSE]) %*%
-                         t(xLagged[-c(1:i),1:(i+1),drop=FALSE]) %*%
-                         x[-c(1:i)])[i+1,];
+    if(kind=="direct"){
+        for(i in 1:lag.max){
+            xPACF[i] <- (invert(t(xLagged[-c(1:i),1:(i+1),drop=FALSE]) %*% xLagged[-c(1:i),1:(i+1),drop=FALSE]) %*%
+                             t(xLagged[-c(1:i),1:(i+1),drop=FALSE]) %*%
+                             x[-c(1:i)])[i+1,];
+        }
+    }
+    else{
+        for(i in 1:lag.max){
+            xPACF[i] <- (invert(t(Conj(xLagged[-c(1:i),1:(i+1),drop=FALSE])) %*% xLagged[-c(1:i),1:(i+1),drop=FALSE]) %*%
+                             t(Conj(xLagged[-c(1:i),1:(i+1),drop=FALSE])) %*%
+                             x[-c(1:i)])[i+1,];
+        }
     }
 
-    acf.out <- structure(list(acf=xPACF, type="partial", n.used=obs,
+    acf.out <- structure(list(acf=xPACF, kind=kind, type="partial", n.used=obs,
                               lag=c(1:lag.max), series=series), class="cacf");
 
     if(plot){
@@ -176,10 +198,12 @@ plot.cacf <- function(x, which=c(1,2), ask=length(which)>1, ...){
             text(Re(x$acf), Im(x$acf), c(1:length(x$acf)), pos=3);
 
             par(mar=c(4,4,1,2))
-            plot(Re(x$acf), type="h", xlab="Lag", ylab="Real CACF");
+            plot(Re(x$acf), type="h", xlab="Lag", ylab="Real CACF",
+                 ylim=c(min(Re(x$acf),-1),max(Re(x$acf),1)));
             abline(h=0);
 
-            plot(Im(x$acf), type="h", xlab="Lag", ylab="Imaginary CACF");
+            plot(Im(x$acf), type="h", xlab="Lag", ylab="Imaginary CACF",
+                 ylim=c(min(Im(x$acf),-1),max(Im(x$acf),1)));
             abline(h=0);
         }
         if(i==2){

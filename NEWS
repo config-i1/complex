@@ -1,5 +1,4 @@
 complex v0.0.2 (Release data: 2022-11-28)
-==============
 
 Changes:
 * Added pseudo- (or "complex") variance, covariance and correlation, cvar, ccov and ccor functions respectively.
@@ -12,6 +11,7 @@ Changes:
 * summary.clm() now has an option to produce real-valued parameters via complex=FALSE.
 * predict.clm() with proper prediction and confidence intervals and plot.predict.clm().
 * Likelihood estimation in clm().
+* direct/conjugate moments in cvar() et al.
 * cplot() to produce scatterplots of complex variables.
 
 
