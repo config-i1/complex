@@ -136,21 +136,24 @@ ccov2cor <- function(V){
 #' @rdname ccor
 #' @export
 covar <- function(x, df=NULL){
-    obs <- length(x);
-
-    if(is.null(df)){
-        df <- obs-1;
-    }
-
     if(is.complex(x)){
         x <- complex2vec(x);
     }
 
     # Centre the variable
     if(is.matrix(x)){
-        x[] <- x - rep(colMeans(x), each=obs);
+        obs <- nrow(x);
+        if(is.null(df)){
+            df <- obs-1;
+        }
+        x[] <- x - matrix(colMeans(x), nrow=obs, ncol=ncol(x), byrow=TRUE);
     }
     else{
+        obs <- length(x);
+
+        if(is.null(df)){
+            df <- obs-1;
+        }
         x[] <- x - mean(x);
     }
 
