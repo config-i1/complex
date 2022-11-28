@@ -1,3 +1,4 @@
+#' @importFrom utils packageVersion
 .onAttach <- function(libname, pkgname) {
     startUpMessage <- paste0("Package \"complex\", v",packageVersion(pkgname)," loaded.");
     packageStartupMessage(startUpMessage);
