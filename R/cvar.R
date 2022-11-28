@@ -55,8 +55,8 @@ cvar <- function(x, kind=c("direct","conjugate"),
             if(is.null(df)){
                 df <- nrow(x)-1;
             }
-            xSums <- matrix(colSums(x, ...),nrow(x),ncol(x),byrow=TRUE);
-            return(t(x-xSums) %*% (x-xSums) / df);
+            xMeans <- matrix(colMeans(x, ...),nrow(x),ncol(x),byrow=TRUE);
+            return(t(x-xMeans) %*% (x-xMeans) / df);
         }
         else{
             if(is.null(df)){
@@ -70,14 +70,14 @@ cvar <- function(x, kind=c("direct","conjugate"),
             if(is.null(df)){
                 df <- nrow(x)-1;
             }
-            xSums <- matrix(colSums(x, ...),nrow(x),ncol(x),byrow=TRUE);
-            return(t(x-xSums) %*% Conj(x-xSums) / df);
+            xMeans <- matrix(colMeans(x, ...),nrow(x),ncol(x),byrow=TRUE);
+            return(Conj(t(x-xMeans)) %*% (x-xMeans) / df);
         }
         else{
             if(is.null(df)){
                 df <- length(x)-1;
             }
-            return(sum((x-mean(x, ...)) * Conj(x-mean(x, ...)), ...) / df);
+            return(sum(Conj(x-mean(x, ...)) * (x-mean(x, ...)), ...) / df);
         }
     }
 }
@@ -106,7 +106,7 @@ ccov <- function(x, y, kind=c("direct","conjugate"),
             if(is.null(df)){
                 df <- length(x)-1;
             }
-            return(sum((x-mean(x, ...))*Conj(y-mean(y, ...)), ...) / df);
+            return(sum(Conj(x-mean(x, ...))*(y-mean(y, ...)), ...) / df);
         }
     }
 }
