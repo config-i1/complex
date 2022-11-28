@@ -146,5 +146,13 @@ covar <- function(x, df=NULL){
         x <- complex2vec(x);
     }
 
+    # Centre the variable
+    if(is.matrix(x)){
+        x[] <- x - rep(colMeans(x), each=obs);
+    }
+    else{
+        x[] <- x - mean(x);
+    }
+
     return(t(x) %*% x / df);
 }
