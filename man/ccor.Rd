@@ -26,7 +26,7 @@ variable \code{y} is ignored.}
 \code{na.rm=TRUE} to remove missing values or \code{trim} to define the trimming
 in the mean (see \link[base]{mean}).}
 
-\item{y}{second vector to calculate pseudo-covariance or pseudo-correlations with.}
+\item{y}{second vector to calculate covariance or correlations with.}
 
 \item{V}{complex pseudo-covariance matrix.}
 

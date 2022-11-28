@@ -19,7 +19,7 @@
 #'
 #' @param x vector or matrix of complex variables. If it is matrix then the
 #' variable \code{y} is ignored.
-#' @param y second vector to calculate pseudo-covariance or pseudo-correlations with.
+#' @param y second vector to calculate covariance or correlations with.
 #' @param ... parameters passed to \code{mean()} functions. For example, this can be
 #' \code{na.rm=TRUE} to remove missing values or \code{trim} to define the trimming
 #' in the mean (see \link[base]{mean}).
