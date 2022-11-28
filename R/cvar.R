@@ -149,10 +149,8 @@ covar <- function(x, df=NULL){
         x[] <- x - matrix(colMeans(x), nrow=obs, ncol=ncol(x), byrow=TRUE);
     }
     else{
-        obs <- length(x);
-
         if(is.null(df)){
-            df <- obs-1;
+            df <- length(x)-1;
         }
         x[] <- x - mean(x);
     }
