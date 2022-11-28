@@ -48,24 +48,36 @@
 #' @rdname ccor
 #' @export
 cvar <- function(x, kind=c("direct","conjugate"),
-                 ...){
+                 df=NULL, ...){
     kind <- match.arg(kind);
     if(kind=="direct"){
         if(is.matrix(x)){
-            xMeans <- matrix(colMeans(x, ...),nrow(x),ncol(x),byrow=TRUE);
-            return(t(x-xMeans) %*% (x-xMeans));
+            if(is.null(df)){
+                df <- nrow(x)-1;
+            }
+            xSums <- matrix(colSums(x, ...),nrow(x),ncol(x),byrow=TRUE);
+            return(t(x-xSums) %*% (x-xSums) / df);
         }
         else{
-            return(mean((x-mean(x, ...))^2, ...));
+            if(is.null(df)){
+                df <- length(x)-1;
+            }
+            return(sum((x-mean(x, ...))^2, ...) / df);
         }
     }
     else{
         if(is.matrix(x)){
-            xMeans <- matrix(colMeans(x, ...),nrow(x),ncol(x),byrow=TRUE);
-            return(t(x-xMeans) %*% Conj(x-xMeans));
+            if(is.null(df)){
+                df <- nrow(x)-1;
+            }
+            xSums <- matrix(colSums(x, ...),nrow(x),ncol(x),byrow=TRUE);
+            return(t(x-xSums) %*% Conj(x-xSums) / df);
         }
         else{
-            return(mean((x-mean(x, ...)) * Conj(x-mean(x, ...)), ...));
+            if(is.null(df)){
+                df <- length(x)-1;
+            }
+            return(sum((x-mean(x, ...)) * Conj(x-mean(x, ...)), ...) / df);
         }
     }
 }
@@ -73,14 +85,17 @@ cvar <- function(x, kind=c("direct","conjugate"),
 #' @rdname ccor
 #' @export
 ccov <- function(x, y, kind=c("direct","conjugate"),
-                 ...){
+                 df=NULL, ...){
     kind <- match.arg(kind);
     if(kind=="direct"){
         if(is.matrix(x)){
             return(cvar(x, kind=kind, ...));
         }
         else{
-            return(mean((x-mean(x, ...))*(y-mean(y, ...)), ...));
+            if(is.null(df)){
+                df <- length(x)-1;
+            }
+            return(sum((x-mean(x, ...))*(y-mean(y, ...)), ...) / df);
         }
     }
     else{
@@ -88,7 +103,10 @@ ccov <- function(x, y, kind=c("direct","conjugate"),
             return(cvar(x, kind=kind, ...));
         }
         else{
-            return(mean((x-mean(x, ...))*Conj(y-mean(y, ...)), ...));
+            if(is.null(df)){
+                df <- length(x)-1;
+            }
+            return(sum((x-mean(x, ...))*Conj(y-mean(y, ...)), ...) / df);
         }
     }
 }
@@ -114,7 +132,7 @@ ccov2cor <- function(V){
 }
 
 
-#' @param df Number of degrees of freedom to use in the calculation of the covariance matrix.
+#' @param df Number of degrees of freedom to use in the calculation of the statistics.
 #' @rdname ccor
 #' @export
 covar <- function(x, df=NULL){

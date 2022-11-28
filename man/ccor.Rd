@@ -8,9 +8,9 @@
 \alias{covar}
 \title{Correlation, Variance and Covariance (Matrices) for complex variables}
 \usage{
-cvar(x, kind = c("direct", "conjugate"), ...)
+cvar(x, kind = c("direct", "conjugate"), df = NULL, ...)
 
-ccov(x, y, kind = c("direct", "conjugate"), ...)
+ccov(x, y, kind = c("direct", "conjugate"), df = NULL, ...)
 
 ccor(x, y, kind = c("direct", "conjugate"), ...)
 
@@ -26,6 +26,8 @@ variable \code{y} is ignored.}
 on the multiplication by conjugate number. \code{"direct"} means the calculation
 without the conjugate (i.e. "pseudo" moment).}
 
+\item{df}{Number of degrees of freedom to use in the calculation of the statistics.}
+
 \item{...}{parameters passed to \code{mean()} functions. For example, this can be
 \code{na.rm=TRUE} to remove missing values or \code{trim} to define the trimming
 in the mean (see \link[base]{mean}).}
@@ -33,8 +35,6 @@ in the mean (see \link[base]{mean}).}
 \item{y}{second vector to calculate covariance or correlations with.}
 
 \item{V}{complex (pseudo)covariance matrix.}
-
-\item{df}{Number of degrees of freedom to use in the calculation of the covariance matrix.}
 }
 \value{
 A scalar or a matrix with resulting complex variables.
