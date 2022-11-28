@@ -51,36 +51,36 @@ cplot <- function(x, y){
     colours <- rep(grey(seq(0.9, 0.1, len=nColours)), each=nColoursTimes);
     omaValues <- c(5,5,2,2);
 
-    par(mfcol=c(3,3), mar=rep(0,4), oma=omaValues, xaxt="s",yaxt="s",cex.main=1.5);
+    par(mfcol=c(3,3), mar=rep(0.1,4), oma=omaValues, xaxt="s",yaxt="s",cex.main=1.5);
 
     plot(Re(ourData$x),Im(ourData$x), col=colours, xlab="Re(x)", ylab="Im(x)", axes=F)
     axis(side=2)
-    box(col="darkred", lwd=2)
+    box(col="darkred", lwd=3)
     mtext("Im(x)", side=2, line=3, at=2.5/3, outer=TRUE)
     plot(Re(ourData$x),Re(ourData$y), col=colours, xlab="Re(x)", ylab="Re(y)", axes=F)
     axis(side=2)
-    box(col="darkblue", lwd=2)
+    box(col="darkblue", lwd=3)
     mtext("Re(y)", side=2, line=3, outer=TRUE)
     plot(Re(ourData$x),Im(ourData$y), col=colours, xlab="Re(x)", ylab="Im(y)", axes=F)
     axis(side=2)
     axis(side=1)
-    box(col="darkgreen", lwd=2)
+    box(col="darkgreen", lwd=3)
     mtext("Im(y)", side=2, line=3, at=0.5/3, outer=TRUE)
     mtext("Re(x)", side=1, line=3, at=0.5/3, outer=TRUE)
 
     plot(0,0, col="white", xlab="", ylab="", axes=F)
     # box(col="black", lwd=1)
     plot(Im(ourData$x),Re(ourData$y), col=colours, ylab="Re(y)", xlab="Im(x)", axes=F)
-    box(col="darkgreen", lwd=2)
+    box(col="darkgreen", lwd=3)
     plot(Im(ourData$x),Im(ourData$y), col=colours, xlab="Im(x)", ylab="Im(y)", axes=F)
     axis(side=1)
-    box(col="darkblue", lwd=2)
+    box(col="darkblue", lwd=3)
     mtext("Im(x)", side=1, line=3, outer=TRUE)
 
     plot(0,0, col="white", xlab="", ylab="", axes=F)
     plot(0,0, col="white", xlab="", ylab="", axes=F)
     plot(Re(ourData$y),Im(ourData$y), col=colours, xlab="Re(y)", ylab="Im(y)", axes=F)
     axis(side=1)
-    box(col="darkred", lwd=2)
+    box(col="darkred", lwd=3)
     mtext("Re(y)", side=1, line=3, at=2.5/3, outer=TRUE)
 }
