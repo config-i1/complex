@@ -120,7 +120,7 @@ ccor <- function(x, y, kind=c("direct","conjugate"),
         ccov2cor(cvar(x, kind=kind, ...));
     }
     else{
-        return(ccov(x, y, kind=kind, ...) / sqrt(cvar(x, kind=kind, ...)*cvar(y, kind=kind, ...)));
+        return(sqrt((ccov(x, y, kind=kind, ...) * ccov(y, x, kind=kind, ...)) / (cvar(x, kind=kind, ...)*cvar(y, kind=kind, ...))));
     }
 }
 
