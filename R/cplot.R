@@ -16,6 +16,9 @@
 #'
 #' @param x vector of a complex variable.
 #' @param y second vector of a complex variable.
+#' @param which defines, what type of plot to produce. \code{which=1} will produce
+#' six scatterplots, while \code{which=2} will produce a scatterplot of data after
+#' multidimensional scaling (creating projections of complex variables to x and y axes).
 #'
 #' @return The function produces a plot and does not return any value
 #'
@@ -31,56 +34,83 @@
 #'
 #' @importFrom graphics axis box mtext
 #' @importFrom grDevices grey palette
+#' @importFrom stats dist cmdscale
 #' @export
-cplot <- function(x, y){
+cplot <- function(x, y, which=1, ...){
     # The function creates scatterplots for two complex variables, x and y
 
-    obs <- length(x)
-    if(length(y)!=obs){
-        stop("The length of x and y differs, cannot proceed", call.=FALSE);
+    xName <- substitute(x);
+    yName <- substitute(y);
+    ellipsis <- list(...);
+
+    which <- which[1];
+
+    if(which==1){
+        obs <- length(x)
+        if(length(y)!=obs){
+            stop("The length of x and y differs, cannot proceed", call.=FALSE);
+        }
+
+        ourData <- data.frame(x=x, y=y);
+        ourData <- ourData[order(abs(ourData$x-complex(real=min(Re(ourData$x)), imaginary=min(Im(ourData$x))))),];
+
+        parDefault <- par(no.readonly=TRUE);
+        on.exit(par(parDefault));
+
+        nColours <- min(1000,obs);
+        nColoursTimes <- floor(obs/nColours);
+        colours <- rep(grey(seq(0.9, 0.1, len=nColours)), each=nColoursTimes);
+        omaValues <- c(5,5,2,2);
+
+        par(mfcol=c(3,3), mar=rep(0.1,4), oma=omaValues, xaxt="s",yaxt="s",cex.main=1.5);
+
+        plot(Re(ourData$x),Im(ourData$x), col=colours, xlab=Re(x), ylab="Im(x)", axes=F);
+        axis(side=2);
+        box(col="darkred", lwd=3);
+        mtext(paste0("Im(",xName,")"), side=2, line=3, at=2.5/3, outer=TRUE);
+        plot(Re(ourData$x),Re(ourData$y), col=colours, xlab="Re(x)", ylab="Re(y)", axes=F);
+        axis(side=2);
+        box(col="darkblue", lwd=3);
+        mtext(paste0("Re(",yName,")"), side=2, line=3, outer=TRUE);
+        plot(Re(ourData$x),Im(ourData$y), col=colours, xlab="Re(x)", ylab="Im(y)", axes=F);
+        axis(side=2);
+        axis(side=1);
+        box(col="darkgreen", lwd=3);
+        mtext(paste0("Im(",yName,")"), side=2, line=3, at=0.5/3, outer=TRUE);
+        mtext(paste0("Re(",xName,")"), side=1, line=3, at=0.5/3, outer=TRUE);
+
+        plot(0,0, col="white", xlab="", ylab="", axes=F);
+        plot(Im(ourData$x),Re(ourData$y), col=colours, ylab="Re(y)", xlab="Im(x)", axes=F);
+        box(col="darkgreen", lwd=3);
+        plot(Im(ourData$x),Im(ourData$y), col=colours, xlab="Im(x)", ylab="Im(y)", axes=F);
+        axis(side=1);
+        box(col="darkblue", lwd=3);
+        mtext(paste0("Im(",xName,")"), side=1, line=3, outer=TRUE);
+
+        plot(0,0, col="white", xlab="", ylab="", axes=F);
+        plot(0,0, col="white", xlab="", ylab="", axes=F);
+        plot(Re(ourData$y),Im(ourData$y), col=colours, xlab="Re(y)", ylab="Im(y)", axes=F);
+        axis(side=1);
+        box(col="darkred", lwd=3);
+        mtext(paste0("Re(",yName,")"), side=1, line=3, at=2.5/3, outer=TRUE);
     }
+    else{
+        # MDS plot
+        if(is.null(ellipsis$xlab)){
+            ellipsis$xlab <- as.character(xName);
+        }
+        if(is.null(ellipsis$ylab)){
+            ellipsis$ylab <- as.character(yName);
+        }
+        if(is.null(ellipsis$main)){
+            ellipsis$main <- "MDS representation of relation between complex variables";
+        }
+        xScaled <- cmdscale(dist(complex2vec(x)), k=1);
+        yScaled <- cmdscale(dist(complex2vec(y)), k=1);
 
-    ourData <- data.frame(x=x, y=y)
-    ourData <- ourData[order(abs(ourData$x-complex(real=min(Re(ourData$x)), imaginary=min(Im(ourData$x))))),]
+        ellipsis$x <- xScaled;
+        ellipsis$y <- yScaled;
 
-    parDefault <- par(no.readonly=TRUE);
-    on.exit(par(parDefault));
-
-    nColours <- min(1000,obs);
-    nColoursTimes <- floor(obs/nColours);
-    colours <- rep(grey(seq(0.9, 0.1, len=nColours)), each=nColoursTimes);
-    omaValues <- c(5,5,2,2);
-
-    par(mfcol=c(3,3), mar=rep(0.1,4), oma=omaValues, xaxt="s",yaxt="s",cex.main=1.5);
-
-    plot(Re(ourData$x),Im(ourData$x), col=colours, xlab="Re(x)", ylab="Im(x)", axes=F)
-    axis(side=2)
-    box(col="darkred", lwd=3)
-    mtext("Im(x)", side=2, line=3, at=2.5/3, outer=TRUE)
-    plot(Re(ourData$x),Re(ourData$y), col=colours, xlab="Re(x)", ylab="Re(y)", axes=F)
-    axis(side=2)
-    box(col="darkblue", lwd=3)
-    mtext("Re(y)", side=2, line=3, outer=TRUE)
-    plot(Re(ourData$x),Im(ourData$y), col=colours, xlab="Re(x)", ylab="Im(y)", axes=F)
-    axis(side=2)
-    axis(side=1)
-    box(col="darkgreen", lwd=3)
-    mtext("Im(y)", side=2, line=3, at=0.5/3, outer=TRUE)
-    mtext("Re(x)", side=1, line=3, at=0.5/3, outer=TRUE)
-
-    plot(0,0, col="white", xlab="", ylab="", axes=F)
-    # box(col="black", lwd=1)
-    plot(Im(ourData$x),Re(ourData$y), col=colours, ylab="Re(y)", xlab="Im(x)", axes=F)
-    box(col="darkgreen", lwd=3)
-    plot(Im(ourData$x),Im(ourData$y), col=colours, xlab="Im(x)", ylab="Im(y)", axes=F)
-    axis(side=1)
-    box(col="darkblue", lwd=3)
-    mtext("Im(x)", side=1, line=3, outer=TRUE)
-
-    plot(0,0, col="white", xlab="", ylab="", axes=F)
-    plot(0,0, col="white", xlab="", ylab="", axes=F)
-    plot(Re(ourData$y),Im(ourData$y), col=colours, xlab="Re(y)", ylab="Im(y)", axes=F)
-    axis(side=1)
-    box(col="darkred", lwd=3)
-    mtext("Re(y)", side=1, line=3, at=2.5/3, outer=TRUE)
+        do.call("plot",ellipsis);
+    }
 }

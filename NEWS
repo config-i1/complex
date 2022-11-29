@@ -1,4 +1,4 @@
-complex v0.0.2 (Release data: 2022-11-28)
+complex v0.0.2 (Release data: 2022-11-29)
 
 Changes:
 * Added pseudo- (or "complex") variance, covariance and correlation, cvar, ccov and ccor functions respectively.
@@ -13,6 +13,7 @@ Changes:
 * Likelihood estimation in clm().
 * direct/conjugate moments in cvar() et al.
 * cplot() to produce scatterplots of complex variables.
+* cplot() with which=2, which now produces scatterplot for variables based on MDS.
 
 
 complex v0.0.1 (Release data: 2019-07-01)

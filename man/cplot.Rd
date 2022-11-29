@@ -4,12 +4,16 @@
 \alias{cplot}
 \title{Scatterplots for complex variables}
 \usage{
-cplot(x, y)
+cplot(x, y, which = 1, ...)
 }
 \arguments{
 \item{x}{vector of a complex variable.}
 
 \item{y}{second vector of a complex variable.}
+
+\item{which}{defines, what type of plot to produce. \code{which=1} will produce
+six scatterplots, while \code{which=2} will produce a scatterplot of data after
+multidimensional scaling (creating projections of complex variables to x and y axes).}
 }
 \value{
 The function produces a plot and does not return any value
