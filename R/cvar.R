@@ -21,7 +21,9 @@
 #' @param y second vector to calculate covariance or correlations with.
 #' @param kind kind of measure to calculate. \code{"conjugate"} means that it is based
 #' on the multiplication by conjugate number. \code{"direct"} means the calculation
-#' without the conjugate (i.e. "pseudo" moment).
+#' without the conjugate (i.e. "pseudo" moment). For \code{ccor} the variable \code{kind}
+#' can also be "pearson", "kendall", or "spearman", defining what correlation coefficient
+#' to use after MDS transformation of complex variable \code{x} and \code{y}.
 #' @param ... parameters passed to \code{mean()} functions. For example, this can be
 #' \code{na.rm=TRUE} to remove missing values or \code{trim} to define the trimming
 #' in the mean (see \link[base]{mean}).
@@ -112,15 +114,23 @@ ccov <- function(x, y, kind=c("direct","conjugate"),
 }
 
 #' @rdname ccor
+#' @importFrom stats cor
 #' @export
-ccor <- function(x, y, kind=c("direct","conjugate"),
+ccor <- function(x, y, kind=c("direct","conjugate","pearson","kendall", "spearman"),
                  ...){
     kind <- match.arg(kind);
-    if(is.matrix(x)){
-        ccov2cor(cvar(x, kind=kind, ...));
+    if(any(kind==c("direct","conjugate"))){
+        if(is.matrix(x)){
+            ccov2cor(cvar(x, kind=kind, ...));
+        }
+        else{
+            return(sqrt((ccov(x, y, kind=kind, ...) * ccov(y, x, kind=kind, ...)) / (cvar(x, kind=kind, ...)*cvar(y, kind=kind, ...))));
+        }
     }
     else{
-        return(sqrt((ccov(x, y, kind=kind, ...) * ccov(y, x, kind=kind, ...)) / (cvar(x, kind=kind, ...)*cvar(y, kind=kind, ...))));
+        xScaled <- cmdscale(dist(complex2vec(x)), k=1)
+        yScaled <- cmdscale(dist(complex2vec(y)), k=1)
+        cor(xScaled, yScaled, method=kind, ...)
     }
 }
 

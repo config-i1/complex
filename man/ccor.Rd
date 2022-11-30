@@ -12,7 +12,8 @@ cvar(x, kind = c("direct", "conjugate"), df = NULL, ...)
 
 ccov(x, y, kind = c("direct", "conjugate"), df = NULL, ...)
 
-ccor(x, y, kind = c("direct", "conjugate"), ...)
+ccor(x, y, kind = c("direct", "conjugate", "pearson", "kendall", "spearman"),
+  ...)
 
 ccov2cor(V)
 
@@ -24,7 +25,9 @@ variable \code{y} is ignored.}
 
 \item{kind}{kind of measure to calculate. \code{"conjugate"} means that it is based
 on the multiplication by conjugate number. \code{"direct"} means the calculation
-without the conjugate (i.e. "pseudo" moment).}
+without the conjugate (i.e. "pseudo" moment). For \code{ccor} the variable \code{kind}
+can also be "pearson", "kendall", or "spearman", defining what correlation coefficient
+to use after MDS transformation of complex variable \code{x} and \code{y}.}
 
 \item{df}{Number of degrees of freedom to use in the calculation of the statistics.}
 

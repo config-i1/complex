@@ -14,6 +14,8 @@ cplot(x, y, which = 1, ...)
 \item{which}{defines, what type of plot to produce. \code{which=1} will produce
 six scatterplots, while \code{which=2} will produce a scatterplot of data after
 multidimensional scaling (creating projections of complex variables to x and y axes).}
+
+\item{...}{otehr parameters passed to plot method. Works only for \code{which=2}.}
 }
 \value{
 The function produces a plot and does not return any value
