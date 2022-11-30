@@ -19,11 +19,11 @@
 #' @param x vector or matrix of complex variables. If it is matrix then the
 #' variable \code{y} is ignored.
 #' @param y second vector to calculate covariance or correlations with.
-#' @param kind kind of measure to calculate. \code{"conjugate"} means that it is based
+#' @param method method to use in the calculation of the measure. \code{"conjugate"} means that it is based
 #' on the multiplication by conjugate number. \code{"direct"} means the calculation
-#' without the conjugate (i.e. "pseudo" moment). For \code{ccor} the variable \code{kind}
+#' without the conjugate (i.e. "pseudo" moment). For \code{ccor} the variable \code{method}
 #' can also be "pearson", "kendall", or "spearman", defining what correlation coefficient
-#' to use after MDS transformation of complex variable \code{x} and \code{y}.
+#' to use after the MDS transformation of complex variables \code{x} and \code{y}.
 #' @param ... parameters passed to \code{mean()} functions. For example, this can be
 #' \code{na.rm=TRUE} to remove missing values or \code{trim} to define the trimming
 #' in the mean (see \link[base]{mean}).
@@ -49,10 +49,10 @@
 #'
 #' @rdname ccor
 #' @export
-cvar <- function(x, kind=c("direct","conjugate"),
+cvar <- function(x, method=c("direct","conjugate"),
                  df=NULL, ...){
-    kind <- match.arg(kind);
-    if(kind=="direct"){
+    method <- match.arg(method);
+    if(method=="direct"){
         if(is.matrix(x)){
             if(is.null(df)){
                 df <- nrow(x)-1;
@@ -86,12 +86,12 @@ cvar <- function(x, kind=c("direct","conjugate"),
 
 #' @rdname ccor
 #' @export
-ccov <- function(x, y, kind=c("direct","conjugate"),
+ccov <- function(x, y, method=c("direct","conjugate"),
                  df=NULL, ...){
-    kind <- match.arg(kind);
-    if(kind=="direct"){
+    method <- match.arg(method);
+    if(method=="direct"){
         if(is.matrix(x)){
-            return(cvar(x, kind=kind, ...));
+            return(cvar(x, method=method, ...));
         }
         else{
             if(is.null(df)){
@@ -102,7 +102,7 @@ ccov <- function(x, y, kind=c("direct","conjugate"),
     }
     else{
         if(is.matrix(x)){
-            return(cvar(x, kind=kind, ...));
+            return(cvar(x, method=method, ...));
         }
         else{
             if(is.null(df)){
@@ -116,21 +116,21 @@ ccov <- function(x, y, kind=c("direct","conjugate"),
 #' @rdname ccor
 #' @importFrom stats cor
 #' @export
-ccor <- function(x, y, kind=c("direct","conjugate","pearson","kendall", "spearman"),
+ccor <- function(x, y, method=c("direct","conjugate","pearson","kendall", "spearman"),
                  ...){
-    kind <- match.arg(kind);
-    if(any(kind==c("direct","conjugate"))){
+    method <- match.arg(method);
+    if(any(method==c("direct","conjugate"))){
         if(is.matrix(x)){
-            ccov2cor(cvar(x, kind=kind, ...));
+            ccov2cor(cvar(x, method=method, ...));
         }
         else{
-            return(sqrt((ccov(x, y, kind=kind, ...) * ccov(y, x, kind=kind, ...)) / (cvar(x, kind=kind, ...)*cvar(y, kind=kind, ...))));
+            return(sqrt((ccov(x, y, method=method, ...) * ccov(y, x, method=method, ...)) / (cvar(x, method=method, ...)*cvar(y, method=method, ...))));
         }
     }
     else{
         xScaled <- cmdscale(dist(complex2vec(x)), k=1)
         yScaled <- cmdscale(dist(complex2vec(y)), k=1)
-        cor(xScaled, yScaled, method=kind, ...)
+        cor(xScaled, yScaled, method=method, ...)
     }
 }
 

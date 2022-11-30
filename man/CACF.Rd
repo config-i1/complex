@@ -7,10 +7,12 @@
 \alias{plot.cacf}
 \title{Complex Correlation Function Estimation}
 \usage{
-cacf(x, lag.max = NULL, kind = c("direct", "conjugate"),
-  type = c("correlation", "covariance", "partial"), plot = TRUE)
+cacf(x, lag.max = NULL, method = c("direct", "conjugate", "pearson",
+  "kendall", "spearman"), type = c("correlation", "covariance", "partial"),
+  plot = TRUE)
 
-pcacf(x, lag.max = NULL, kind = c("direct", "conjugate"), plot = TRUE)
+pcacf(x, lag.max = NULL, method = c("direct", "conjugate", "pearson",
+  "kendall", "spearman"), plot = TRUE)
 
 \method{print}{cacf}(x, ...)
 
@@ -21,9 +23,11 @@ pcacf(x, lag.max = NULL, kind = c("direct", "conjugate"), plot = TRUE)
 
 \item{lag.max}{maximum number of lags. See \link[stats]{acf} for more details.}
 
-\item{kind}{type of measure to calculate. \code{"conjugate"} means that it is based
+\item{method}{method to use in the calculation of the measure. \code{"conjugate"} means that it is based
 on the multiplication by conjugate number. \code{"direct"} means the calculation
-without the conjugate (i.e. "pseudo" moment).}
+without the conjugate (i.e. "pseudo" moment). \code{method}
+can also be "pearson", "kendall", or "spearman", defining what correlation coefficient
+to use after the MDS transformation of complex variables \code{x} and \code{y}.}
 
 \item{type}{character string giving the type of CACF to be computed. Allowed values
 are "correlation" (the default) and "covariance". Will be partially matched.}
@@ -43,7 +47,7 @@ An object of class "cacf", which is a list with the following elements:
 \itemize{
 \item \code{lag} A three dimensional array containing the lags at which the CACF is estimated.
 \item \code{acf} An array with the same dimensions as lag containing the estimated CACF.
-\item \code{kind} The kind of moment used in calculation (same as the kind argument).
+\item \code{method} The method used in calculation (same as the method argument).
 \item \code{type} The type of correlation (same as the type argument).
 \item \code{n.used} The number of observations in the time series.
 \item \code{series} The name of the series x.

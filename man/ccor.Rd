@@ -8,12 +8,12 @@
 \alias{covar}
 \title{Correlation, Variance and Covariance (Matrices) for complex variables}
 \usage{
-cvar(x, kind = c("direct", "conjugate"), df = NULL, ...)
+cvar(x, method = c("direct", "conjugate"), df = NULL, ...)
 
-ccov(x, y, kind = c("direct", "conjugate"), df = NULL, ...)
+ccov(x, y, method = c("direct", "conjugate"), df = NULL, ...)
 
-ccor(x, y, kind = c("direct", "conjugate", "pearson", "kendall", "spearman"),
-  ...)
+ccor(x, y, method = c("direct", "conjugate", "pearson", "kendall",
+  "spearman"), ...)
 
 ccov2cor(V)
 
@@ -23,11 +23,11 @@ covar(x, df = NULL)
 \item{x}{vector or matrix of complex variables. If it is matrix then the
 variable \code{y} is ignored.}
 
-\item{kind}{kind of measure to calculate. \code{"conjugate"} means that it is based
+\item{method}{method to use in the calculation of the measure. \code{"conjugate"} means that it is based
 on the multiplication by conjugate number. \code{"direct"} means the calculation
-without the conjugate (i.e. "pseudo" moment). For \code{ccor} the variable \code{kind}
+without the conjugate (i.e. "pseudo" moment). For \code{ccor} the variable \code{method}
 can also be "pearson", "kendall", or "spearman", defining what correlation coefficient
-to use after MDS transformation of complex variable \code{x} and \code{y}.}
+to use after the MDS transformation of complex variables \code{x} and \code{y}.}
 
 \item{df}{Number of degrees of freedom to use in the calculation of the statistics.}
 
