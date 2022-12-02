@@ -124,7 +124,11 @@ ccor <- function(x, y, method=c("direct","conjugate","pearson","kendall", "spear
             ccov2cor(cvar(x, method=method, ...));
         }
         else{
-            return(sqrt((ccov(x, y, method=method, ...) * ccov(y, x, method=method, ...)) / (cvar(x, method=method, ...)*cvar(y, method=method, ...))));
+            switch(method,
+                   "direct"=sqrt((ccov(x, y, method=method, ...) * ccov(y, x, method=method, ...)) /
+                                     (cvar(x, method=method, ...)*cvar(y, method=method, ...))),
+                   "conjugate"=(ccov(y, x, method=method, ...) /
+                                    sqrt((cvar(x, method=method, ...)*cvar(y, method=method, ...)))));
         }
     }
     else{
