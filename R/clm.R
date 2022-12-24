@@ -726,15 +726,31 @@ vcov.clm <- function(object, ...){
         matrixXreg <- matrixXreg[,-1,drop=FALSE];
     }
 
-    # Transform the matrix to be a matrix
-    matrixXreg <- complex2mat(matrixXreg);
+    if(object$loss=="OLS"){
+        # Transform the complex matrix to be a matrix
+        matrixXreg <- complex2mat(matrixXreg);
+        matrixXregTrans <- t(matrixXreg);
+        sigmaValue <- sum((c(Re(resid(object)),Im(resid(object))))^2)/((nobs(object)-nparam(object))*2);
+    }
+    else if(object$loss=="CLS"){
+        # Transform the complex matrix to be a matrix
+        matrixXregTrans <- complex2mat(t(matrixXreg));
+        matrixXreg <- complex2mat(matrixXreg);
+        sigmaValue <- sum((c(Re(resid(object)),Im(resid(object))))^2)/((nobs(object)-nparam(object))*2);
+    }
+    else{
+        sigmaValue <- sigma(object);
+    }
 
-    # This is equivalent to doing invert(t(Conj(matrixXreg)) %*% matrixXreg) on original complex matrix
-    vcov <- Re(invert(t(matrixXreg) %*% matrixXreg));
+    # Calculate the (X'X)^{-1}
+    vcov <- Re(invert(matrixXregTrans %*% matrixXreg));
     ndimVcov <- ncol(vcov);
-    sigmaValue <- sigma(object);
 
     if(any(object$loss==c("CLS","OLS"))){
+        vcov[] <- vcov * sigmaValue
+    }
+    # Likelihood estimate
+    else{
         for(i in 1:(ndimVcov/2)){
             for(j in 1:(ndimVcov/2)){
                 vcov[(1:2)+(i-1)*2,(1:2)+(j-1)*2] <- vcov[(1:2)+(i-1)*2,(1:2)+(j-1)*2] * sigmaValue;
@@ -763,8 +779,15 @@ confint.clm <- function(object, parm, level = 0.95, complex=TRUE, ...){
     # Extract coefficients
     parameters <- coef(object);
     parametersNames <- names(parameters);
-    # Get complex variance
-    parametersSE <- sqrt(diag(vcov(object)));
+    # Get covariance matrix
+    vcovValues <- vcov(object);
+    #### !!!! Temporary fix for negative variances !!!! ####
+    if(any(diag(vcovValues)<0)){
+        parametersSE <- Im(sqrt(as.complex(diag(vcovValues))));
+    }
+    else{
+        parametersSE <- sqrt(diag(vcovValues));
+    }
     varLength <- length(parametersSE);
     parametersSE <- complex(real=parametersSE[1:(varLength/2)*2-1],imaginary=parametersSE[1:(varLength/2)*2]);
 
