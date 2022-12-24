@@ -739,6 +739,9 @@ vcov.clm <- function(object, ...){
         sigmaValue <- sum((c(Re(resid(object)),Im(resid(object))))^2)/((nobs(object)-nparam(object))*2);
     }
     else{
+        # Transform the complex matrix to be a matrix
+        matrixXreg <- complex2mat(matrixXreg);
+        matrixXregTrans <- t(matrixXreg);
         sigmaValue <- sigma(object);
     }
 
@@ -783,7 +786,7 @@ confint.clm <- function(object, parm, level = 0.95, complex=TRUE, ...){
     vcovValues <- vcov(object);
     #### !!!! Temporary fix for negative variances !!!! ####
     if(any(diag(vcovValues)<0)){
-        parametersSE <- Im(sqrt(as.complex(diag(vcovValues))));
+        parametersSE <- abs(sqrt(as.complex(diag(vcovValues))));
     }
     else{
         parametersSE <- sqrt(diag(vcovValues));
