@@ -726,18 +726,20 @@ vcov.clm <- function(object, ...){
         matrixXreg <- matrixXreg[,-1,drop=FALSE];
     }
 
-    if(object$loss=="OLS"){
+    if(any(object$loss==c("OLS","CLS"))){
         # Transform the complex matrix to be a matrix
         matrixXreg <- complex2mat(matrixXreg);
         matrixXregTrans <- t(matrixXreg);
         sigmaValue <- sum((c(Re(resid(object)),Im(resid(object))))^2)/((nobs(object)-nparam(object))*2);
     }
-    else if(object$loss=="CLS"){
-        # Transform the complex matrix to be a matrix
-        matrixXregTrans <- complex2mat(t(matrixXreg));
-        matrixXreg <- complex2mat(matrixXreg);
-        sigmaValue <- sum((c(Re(resid(object)),Im(resid(object))))^2)/((nobs(object)-nparam(object))*2);
-    }
+    # else if(object$loss=="CLS"){
+    #     # Transform the complex matrix to be a matrix
+    #     matrixXreg <- complex2mat(matrixXreg);
+    #     matrixXregTrans <- t(matrixXreg);
+    #     matrixXregTrans <- complex2mat(t(matrixXreg));
+    #     matrixXreg <- complex2mat(matrixXreg);
+    #     sigmaValue <- sum((c(Re(resid(object)),Im(resid(object))))^2)/((nobs(object)-nparam(object))*2);
+    # }
     else{
         # Transform the complex matrix to be a matrix
         matrixXreg <- complex2mat(matrixXreg);
