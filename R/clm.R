@@ -703,10 +703,12 @@ logLik.clm <- function(object, ...){
 #' @importFrom stats sigma
 #' @export
 sigma.clm <- function(object, ...){
-    # complexVector <- complex2vec(resid(object));
-    # return(t(complexVector) %*% complexVector / (nobs(object) - nparam(object)));
-    # return(object$scale*nobs(object)/(nobs(object) - nparam(object)));
-    return(covar(resid(object), df=nobs(object)-nparam(object)));
+    if(any(object$loss==c("OLS","CLS"))){
+        return(object$scale*sqrt(nobs(object)/(nobs(object) - nparam(object))));
+    }
+    else{
+        return(covar(resid(object), df=nobs(object)-nparam(object)));
+    }
 }
 
 #' @importFrom stats vcov
@@ -726,25 +728,19 @@ vcov.clm <- function(object, ...){
         matrixXreg <- matrixXreg[,-1,drop=FALSE];
     }
 
-    if(any(object$loss==c("OLS","CLS"))){
-        # Transform the complex matrix to be a matrix
+    sigmaValue <- sigma(object);
+    if(object$loss=="CLS"){
+        # Simple transposition of the matrix
+        matrixXregTrans <- complex2mat(t(matrixXreg));
         matrixXreg <- complex2mat(matrixXreg);
-        matrixXregTrans <- t(matrixXreg);
-        sigmaValue <- sum((c(Re(resid(object)),Im(resid(object))))^2)/((nobs(object)-nparam(object))*2);
+        # Calculate conjugate variance of the residuals
+        sigmaValue <- Re(sqrt(sum(resid(object) * Conj(resid(object)))/(nobs(object)-nparam(object))));
     }
-    # else if(object$loss=="CLS"){
-    #     # Transform the complex matrix to be a matrix
-    #     matrixXreg <- complex2mat(matrixXreg);
-    #     matrixXregTrans <- t(matrixXreg);
-    #     matrixXregTrans <- complex2mat(t(matrixXreg));
-    #     matrixXreg <- complex2mat(matrixXreg);
-    #     sigmaValue <- sum((c(Re(resid(object)),Im(resid(object))))^2)/((nobs(object)-nparam(object))*2);
-    # }
     else{
         # Transform the complex matrix to be a matrix
         matrixXreg <- complex2mat(matrixXreg);
+        # Conjugate transposition
         matrixXregTrans <- t(matrixXreg);
-        sigmaValue <- sigma(object);
     }
 
     # Calculate the (X'X)^{-1}
