@@ -1,4 +1,4 @@
-complex v0.0.2 (Release data: 2022-11-30)
+complex v0.0.2 (Release data: 2022-12-30)
 
 Changes:
 * Added pseudo- (or "complex") variance, covariance and correlation, cvar, ccov and ccor functions respectively.
@@ -16,6 +16,7 @@ Changes:
 * cplot() with which=2, which now produces scatterplot for variables based on MDS.
 * ccor() now also does MDS if needed.
 * cacf() with MDS and Pearson's correlation.
+* Complex Normal distribution as a wrapper of a bivariate Normal one, using mvtnorm package.
 
 
 complex v0.0.1 (Release data: 2019-07-01)
