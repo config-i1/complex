@@ -8,47 +8,50 @@
 \alias{rcnorm}
 \title{Complex Normal Distribution}
 \usage{
-dcnorm(q, mu = 0 + (0+0i), sigma = 1, varsigma = 0 + (0+0i),
-  log = FALSE, ...)
+dcnorm(q, mu = 0, sigma2 = 1, varsigma2 = 0, log = FALSE, ...)
 
-pcnorm(lower = -Inf, upper = Inf, mu = 0 + (0+0i), sigma = 1,
-  varsigma = 0 + (0+0i), ...)
+pcnorm(lower = -Inf, upper = Inf, mu = 0, sigma2 = 1, varsigma2 = 0,
+  ...)
 
-qcnorm(p, mu = 0 + (0+0i), sigma = 1, varsigma = 0 + (0+0i), ...)
+qcnorm(p, mu = 0, sigma2 = 1, varsigma2 = 0, ...)
 
-rcnorm(n = 1, mu = 0 + (0+0i), sigma = 1, varsigma = 0 + (0+0i), ...)
+rcnorm(n = 1, mu = 0, sigma2 = 1, varsigma2 = 0, ...)
 }
 \arguments{
 \item{q}{vector of quantiles.}
 
 \item{mu}{vector of location parameters (means).}
 
+\item{sigma2}{vector of conjugate variances.}
+
+\item{varsigma2}{vector of direct variances.}
+
 \item{log}{if \code{TRUE}, then probabilities are returned in
 logarithms.}
 
 \item{...}{Other parameters passed to the \code{mvtnorm} functions.}
 
+\item{lower}{complex number of lower limits of length n.}
+
+\item{upper}{complex number of upper limits of length n.}
+
 \item{p}{vector of probabilities.}
 
 \item{n}{number of observations. Should be a single number.}
-
-\item{sigma2}{vector of conjugate variances.}
-
-\item{varsigma2}{vector of direct variances.}
 }
 \value{
 Depending on the function, various things are returned
 (usually either vector or scalar):
 \itemize{
 \item \code{dcnorm} returns the density function values for the
-provided parameters, based on \link[mvtnorm](Mvnorm) function.
+provided parameters, based on \link[mvtnorm]{Mvnorm} function.
 \item \code{pcnorm} returns the values of the cumulative function
-for the provided parameters, based on \link[mvtnorm](pmvnorm) function.
+for the provided parameters, based on \link[mvtnorm]{pmvnorm} function.
 \item \code{qcnorm} returns quantiles of the distribution,
-based on \link[mvtnorm](qmvnorm) function.
+based on \link[mvtnorm]{qmvnorm} function.
 \item \code{rcnorm} returns a vector of random variables
 generated from the Complex Normal distribution,
-based on \link[mvtnorm](Mvnorm) function.
+based on \link[mvtnorm]{Mvnorm} function.
 }
 }
 \description{
@@ -72,10 +75,10 @@ tail of the distribution.
 All the functions are defined for non-negative values only.
 }
 \examples{
-dcnorm(89+90i, 100+100i, 1, 1+1i)
-pcnorm(89+90i, 100+100i, 1, 1+1i)
-qcnorm(c(0.025,0.975), 100+100i, 1, 1+1i)
-rcnorm(1000, 100+100i, 1, 1+1i)
+dcnorm(89+90i, 100+100i, 2, 1+1i)
+pcnorm(90+90i, 110+110i, 100+100i, 2, 1+1i)
+qcnorm(0.95, 100+100i, 2, 1+1i)
+rcnorm(1000, 100+100i, 2, 1+1i)
 
 }
 \author{
