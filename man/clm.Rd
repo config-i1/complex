@@ -3,6 +3,7 @@
 \name{clm}
 \alias{clm}
 \alias{sigma.clm}
+\alias{vcov.clm}
 \alias{summary.clm}
 \title{Complex Linear Model}
 \usage{
@@ -11,7 +12,9 @@ clm(formula, data, subset, na.action, loss = c("OLS", "CLS", "likelihood",
 
 \method{sigma}{clm}(object, type = NULL, ...)
 
-\method{summary}{clm}(object, level = 0.95, complex = TRUE, ...)
+\method{vcov}{clm}(object, type = NULL, ...)
+
+\method{summary}{clm}(object, level = 0.95, ...)
 }
 \arguments{
 \item{formula}{an object of class "formula" (or one that can be coerced to
@@ -64,11 +67,11 @@ cause trouble, especially in cases of multicollinearity.}
 \item{type}{Type of sigma to return. This is calculated based on the residuals
 of the estimated model and can be \code{"direct"}, based on the direct variance,
 \code{"conjugate"}, based on the conjugate variance and \code{"matrix"}, returning
-covariance matrix for the complex error.}
+covariance matrix for the complex error. If \code{NULL} then will return value based
+on the loss used in the estimation: OLS -> "conjugate", CLS -> "direct", likelihood ->
+"matrix".}
 
 \item{level}{What confidence level to use for the parameters of the model.}
-
-\item{complex}{Boolean. If TRUE, the output will contain complex parameters.}
 }
 \value{
 Function returns \code{model} - the final model of the class
