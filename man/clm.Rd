@@ -2,11 +2,14 @@
 % Please edit documentation in R/clm.R
 \name{clm}
 \alias{clm}
+\alias{sigma.clm}
 \alias{summary.clm}
 \title{Complex Linear Model}
 \usage{
 clm(formula, data, subset, na.action, loss = c("OLS", "CLS", "likelihood",
   "MSE", "MAE", "HAM"), parameters = NULL, fast = FALSE, ...)
+
+\method{sigma}{clm}(object, type = NULL, ...)
 
 \method{summary}{clm}(object, level = 0.95, complex = TRUE, ...)
 }
@@ -54,37 +57,14 @@ is estimated.}
 the data has variability and whether the regressors are correlated. Might
 cause trouble, especially in cases of multicollinearity.}
 
-\item{...}{additional parameters to pass to distribution functions. This
-includes:
-\itemize{
-\item \code{FI=TRUE} will make the function also produce Fisher Information
-matrix, which then can be used to calculated variances of smoothing parameters
-and initial states of the model. This is used in the \link[stats]{vcov} method;
-}
-
-You can also pass parameters to the optimiser:
-\enumerate{
-\item \code{B} - the vector of starting values of parameters for the optimiser,
-should correspond to the explanatory variables. If formula for scale was provided,
-the parameters for that part should follow the parameters for location;
-\item \code{algorithm} - the algorithm to use in optimisation
-(\code{"NLOPT_LN_SBPLX"} by default);
-\item \code{maxeval} - maximum number of evaluations to carry out. Default is 40 per
-estimated parameter. In case of LASSO / RIDGE the default is 80 per estimated parameter;
-\item \code{maxtime} - stop, when the optimisation time (in seconds) exceeds this;
-\item \code{xtol_rel} - the precision of the optimiser (the default is 1E-6);
-\item \code{xtol_abs} - the absolute precision of the optimiser (the default is 1E-8);
-\item \code{ftol_rel} - the stopping criterion in case of the relative change in the loss
-function (the default is 1E-4);
-\item \code{ftol_abs} - the stopping criterion in case of the absolute change in the loss
-function (the default is 0 - not used);
-\item \code{print_level} - the level of output for the optimiser (0 by default).
-If equal to 41, then the detailed results of the optimisation are returned.
-}
-You can read more about these parameters by running the function
-\link[nloptr]{nloptr.print.options}.}
+\item{...}{Other parameters passed to internal functions.}
 
 \item{object}{Object of class "clm" estimated via \code{clm()} function.}
+
+\item{type}{Type of sigma to return. This is calculated based on the residuals
+of the estimated model and can be \code{"direct"}, based on the direct variance,
+\code{"conjugate"}, based on the conjugate variance and \code{"matrix"}, returning
+covariance matrix for the complex error.}
 
 \item{level}{What confidence level to use for the parameters of the model.}
 

@@ -700,15 +700,35 @@ logLik.clm <- function(object, ...){
     return(structure(object$logLik,nobs=nobs(object),df=nparam(object),class="logLik"));
 }
 
+#' @rdname clm
+#' @param object Model estimated using \code{clm()} function.
+#' @param type Type of sigma to return. This is calculated based on the residuals
+#' of the estimated model and can be \code{"direct"}, based on the direct variance,
+#' \code{"conjugate"}, based on the conjugate variance and \code{"matrix"}, returning
+#' covariance matrix for the complex error.
+#' @param ... Other parameters passed to internal functions.
 #' @importFrom stats sigma
 #' @export
-sigma.clm <- function(object, ...){
-    if(any(object$loss==c("OLS","CLS"))){
-        return(object$scale*sqrt(nobs(object)/(nobs(object) - nparam(object))));
+sigma.clm <- function(object, type=NULL, ...){
+
+    # See the type
+    if(!is.null(type)){
+        type <- match.arg(type, c("direct","conjugate","matrix"));
     }
     else{
-        return(covar(resid(object), df=nobs(object)-nparam(object)));
+        # Default values
+        type <- switch(object$loss,
+                       "OLS"="direct",
+                       "CLS"="conjugate",
+                       "likelihood"="matrix")
     }
+
+    errors <- resid(object);
+    sigmaValue <- switch(type,
+                         "direct"=sqrt(sum(errors^2, ...)/(nobs(object) - nparam(object))),
+                         "conjugate"=sqrt(sum(errors * Conj(errors), ...)/(nobs(object) - nparam(object))),
+                         covar(errors, df=nobs(object)-nparam(object)));
+    return(sigmaValue);
 }
 
 #' @importFrom stats vcov
