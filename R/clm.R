@@ -730,6 +730,11 @@ sigma.clm <- function(object, type=NULL, ...){
                          "direct"=sqrt(sum(errors^2, ...)/(nobs(object) - nparam(object))),
                          "conjugate"=sqrt(sum(errors * Conj(errors), ...)/(nobs(object) - nparam(object))),
                          covar(errors, df=nobs(object)-nparam(object)));
+
+    if(type=="matrix"){
+        colnames(sigmaValue) <- rownames(sigmaValue) <- c("e_r", "e_i");
+    }
+
     return(sigmaValue);
 }
 
