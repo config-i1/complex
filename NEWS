@@ -1,4 +1,4 @@
-complex v0.0.2 (Release data: 2022-12-30)
+complex v0.0.2 (Release data: 2023-04-19)
 
 Changes:
 * Added pseudo- (or "complex") variance, covariance and correlation, cvar, ccov and ccor functions respectively.
@@ -8,7 +8,6 @@ Changes:
 * mat2complex() and vec2complex() functions to reverse what the previous two do.
 * vcov(), confint() and summary() for clm class.
 * covar() function to produce covariance matrix from a random complex variable.
-* summary.clm() now has an option to produce real-valued parameters via complex=FALSE.
 * predict.clm() with proper prediction and confidence intervals and plot.predict.clm().
 * Likelihood estimation in clm().
 * direct/conjugate moments in cvar() et al.
@@ -17,6 +16,8 @@ Changes:
 * ccor() now also does MDS if needed.
 * cacf() with MDS and Pearson's correlation.
 * Complex Normal distribution as a wrapper of a bivariate Normal one, using mvtnorm package.
+* sigma() now returns an object based on the provided type. This includes direct, conjugate and covariance matrix.
+* vcov() now returns direct or conjugate covariance matrices, or the proper covariance matrix (based on covariance matrix of the error term).
 
 
 complex v0.0.1 (Release data: 2019-07-01)

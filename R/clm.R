@@ -700,20 +700,56 @@ logLik.clm <- function(object, ...){
     return(structure(object$logLik,nobs=nobs(object),df=nparam(object),class="logLik"));
 }
 
+#' @rdname clm
+#' @param object Model estimated using \code{clm()} function.
+#' @param type Type of sigma to return. This is calculated based on the residuals
+#' of the estimated model and can be \code{"direct"}, based on the direct variance,
+#' \code{"conjugate"}, based on the conjugate variance and \code{"matrix"}, returning
+#' covariance matrix for the complex error. If \code{NULL} then will return value based
+#' on the loss used in the estimation: OLS -> "conjugate", CLS -> "direct", likelihood ->
+#' "matrix".
+#' @param ... Other parameters passed to internal functions.
 #' @importFrom stats sigma
 #' @export
-sigma.clm <- function(object, ...){
-    if(any(object$loss==c("OLS","CLS"))){
-        return(object$scale*sqrt(nobs(object)/(nobs(object) - nparam(object))));
+sigma.clm <- function(object, type=NULL, ...){
+
+    # See the type
+    if(!is.null(type)){
+        type <- match.arg(type, c("direct","conjugate","matrix"));
     }
     else{
-        return(covar(resid(object), df=nobs(object)-nparam(object)));
+        # Default values
+        type <- switch(object$loss,
+                       "CLS"="direct",
+                       "OLS"="conjugate",
+                       "likelihood"="matrix")
     }
+
+    errors <- resid(object);
+    sigmaValue <- switch(type,
+                         "direct"=sqrt(sum(errors^2, ...)/(nobs(object) - nparam(object))),
+                         "conjugate"=sqrt(sum(errors * Conj(errors), ...)/(nobs(object) - nparam(object))),
+                         covar(errors, df=nobs(object)-nparam(object)));
+    return(sigmaValue);
 }
 
+#' @rdname clm
 #' @importFrom stats vcov
 #' @export
-vcov.clm <- function(object, ...){
+vcov.clm <- function(object, type=NULL, ...){
+
+    # See the type
+    if(!is.null(type)){
+        type <- match.arg(type, c("direct","conjugate","matrix"));
+    }
+    else{
+        # Default values
+        type <- switch(object$loss,
+                       "CLS"="direct",
+                       "OLS"="conjugate",
+                       "likelihood"="matrix")
+    }
+
     nVariables <- length(coef(object));
     variablesNames <- names(coef(object));
     interceptIsNeeded <- any(variablesNames=="(Intercept)");
@@ -728,27 +764,73 @@ vcov.clm <- function(object, ...){
         matrixXreg <- matrixXreg[,-1,drop=FALSE];
     }
 
-    sigmaValue <- sigma(object);
-    if(object$loss=="CLS"){
-        # Simple transposition of the matrix
-        matrixXregTrans <- complex2mat(t(matrixXreg));
-        matrixXreg <- complex2mat(matrixXreg);
-        # Calculate conjugate variance of the residuals
-        sigmaValue <- Re(sqrt(sum(resid(object) * Conj(resid(object)))/(nobs(object)-nparam(object))));
+    sigmaValue <- sigma(object, type);
+
+    if(type=="conjugate"){
+        # Get variance
+        sigmaValue[] <- sigmaValue^2;
+        if(object$loss=="CLS"){
+            # Conjugate matrix
+            matrixXregConj <- Conj(matrixXreg);
+            # Transposed original
+            matrixXregTrans <- t(matrixXreg);
+            # Conjugate transposed matrix
+            matrixXregConjTrans <- t(Conj(matrixXreg));
+
+            # Calculate the (X'X)^{-1} X'X~ (X~' X~)^{-1'}
+            vcov <-
+                invert(matrixXregTrans %*% matrixXreg) %*%
+                (matrixXregTrans %*% matrixXregConj) %*%
+                t(invert(t(matrixXregConj) %*% matrixXregConj));
+        }
+        # OLS and likelihood
+        else {
+            # Conjugate matrix
+            matrixXregConj <- Conj(matrixXreg);
+            # Transposed conjugate original
+            matrixXregConjTrans <- t(Conj(matrixXreg));
+            # Transposed matrix
+            matrixXregTrans <- t(matrixXreg);
+
+            # Calculate the (X'X)^{-1} X'X~ (X~' X~)^{-1'}
+            vcov <-
+                invert(matrixXregConjTrans %*% matrixXreg) %*%
+                (matrixXregConjTrans %*% matrixXreg) %*%
+                t(Conj(invert(matrixXregTrans %*% matrixXregConj)));
+        }
+    }
+    else if(type=="direct"){
+        # Get variance
+        sigmaValue[] <- sigmaValue^2;
+        if(object$loss=="CLS"){
+            # Simple transposition of the matrix
+            matrixXregTrans <- t(matrixXreg);
+            matrixXreg <- matrixXreg;
+        }
+        # OLS and likelihood
+        else {
+            # Simple transposition of the matrix
+            matrixXregTrans <- t(Conj(matrixXreg));
+        }
+
+        # Calculate the (X' X)^{-1}
+        vcov <- invert(matrixXregTrans %*% matrixXreg);
     }
     else{
         # Transform the complex matrix to be a matrix
         matrixXreg <- complex2mat(matrixXreg);
         # Conjugate transposition
         matrixXregTrans <- t(matrixXreg);
-    }
 
-    # Calculate the (X'X)^{-1}
-    vcov <- Re(invert(matrixXregTrans %*% matrixXreg));
+        # Calculate the (X'X)^{-1}
+        # Re() is needed to drop the 0i
+        vcov <- Re(invert(matrixXregTrans %*% matrixXreg));
+    }
     ndimVcov <- ncol(vcov);
 
-    if(any(object$loss==c("CLS","OLS"))){
-        vcov[] <- vcov * sigmaValue
+    if(any(type==c("direct","conjugate"))){
+        vcov[] <- vcov * sigmaValue;
+        rownames(vcov) <- colnames(vcov) <- names(coef(object));
     }
     # Likelihood estimate
     else{
@@ -757,40 +839,38 @@ vcov.clm <- function(object, ...){
                 vcov[(1:2)+(i-1)*2,(1:2)+(j-1)*2] <- vcov[(1:2)+(i-1)*2,(1:2)+(j-1)*2] * sigmaValue;
             }
         }
+        rownames(vcov) <- colnames(vcov) <- names(complex2mat(coef(object))[,1]);
     }
-
-    # if(object$loss=="CLS"){
-    #     vcov <- invert(t(matrixXreg) %*% matrixXreg) * sigma(object)^2;
-    # }
-    # else if(object$loss=="OLS"){
-    #     vcov <- invert(t(Conj(matrixXreg)) %*% matrixXreg) * sigma(object)^2;
-    # }
-    # rownames(vcov) <- colnames(vcov) <- variablesNames;
 
     return(vcov);
 }
 
 #' @importFrom stats resid qt
 #' @export
-confint.clm <- function(object, parm, level = 0.95, complex=TRUE, ...){
+confint.clm <- function(object, parm, level = 0.95, ...){
 
     confintNames <- c(paste0((1-level)/2*100,"%"),
                       paste0((1+level)/2*100,"%"));
 
     # Extract coefficients
-    parameters <- coef(object);
+    parameters <- complex2mat(coef(object))[,1];
     parametersNames <- names(parameters);
-    # Get covariance matrix
-    vcovValues <- vcov(object);
-    #### !!!! Temporary fix for negative variances !!!! ####
-    if(any(diag(vcovValues)<0)){
-        parametersSE <- abs(sqrt(as.complex(diag(vcovValues))));
+    parametersLength <- length(parametersNames);
+
+    if(object$loss=="likelihood"){
+        # Get covariance matrix
+        parametersSE <- sqrt(diag(vcov(object, type="matrix")));
     }
     else{
-        parametersSE <- sqrt(diag(vcovValues));
+        parametersSEDir <- Re(diag(vcov(object, type="direct")));
+        parametersSEConj <- Re(diag(vcov(object, type="conjugate")));
+        parametersSE <- vector("numeric", parametersLength);
+        # Real values
+        parametersSE[1:(parametersLength/2)*2-1] <- sqrt((parametersSEConj + parametersSEDir)/2);
+        # Imaginary values
+        parametersSE[1:(parametersLength/2)*2] <- sqrt((parametersSEConj - parametersSEDir)/2);
     }
     varLength <- length(parametersSE);
-    parametersSE <- complex(real=parametersSE[1:(varLength/2)*2-1],imaginary=parametersSE[1:(varLength/2)*2]);
 
     # Define quantiles using Student distribution
     paramQuantiles <- qt((1+level)/2,df=object$df.residual);
@@ -814,16 +894,15 @@ confint.clm <- function(object, parm, level = 0.95, complex=TRUE, ...){
 #' @rdname clm
 #' @param object Object of class "clm" estimated via \code{clm()} function.
 #' @param level What confidence level to use for the parameters of the model.
-#' @param complex Boolean. If TRUE, the output will contain complex parameters.
 #' @export
-summary.clm <- function(object, level=0.95, complex=TRUE, ...){
+summary.clm <- function(object, level=0.95, ...){
     bootstrap <- FALSE;
     errors <- residuals(object);
     obs <- nobs(object, all=TRUE);
 
     # Collect parameters and their standard errors
     parametersConfint <- confint(object, level=level, bootstrap=bootstrap, ...);
-    parameters <- coef(object);
+    parameters <- complex2mat(coef(object))[,1];
     parametersLength <- length(parameters);
     parametersTable <- cbind(parameters,parametersConfint);
     parametersTableColnames <- c("Estimate","Std. Error",
@@ -833,27 +912,10 @@ summary.clm <- function(object, level=0.95, complex=TRUE, ...){
     rownames(parametersTable) <- parametersTableRownames;
     colnames(parametersTable) <- parametersTableColnames;
 
-    # If the user asked for non-complex summary, do the thing
-    if(!complex){
-        parametersTable <- complex2vec(parametersTable);
-        # Stack things below each other
-        parametersTable <- Re(rbind(parametersTable[,(1:4)*2-1,drop=FALSE],
-                                    parametersTable[,(1:4)*2,drop=FALSE]));
-        parametersTable[] <- parametersTable[c((1:parametersLength)*2-1,(1:parametersLength)*2),];
-        colnames(parametersTable) <- parametersTableColnames;
-        rownames(parametersTable) <- paste0(rep(parametersTableRownames,each=2),c("_r","_i"));
-        parametersLength <- nrow(parametersTable);
-    }
     ourReturn <- list(coefficients=parametersTable);
 
     # Mark those that are significant on the selected level
-    if(!complex){
-        ourReturn$significance <- !(abs(parametersTable[,3])<=0 & abs(parametersTable[,4])>=0);
-    }
-    else{
-        #### It's not clear what significance means in case of complex numbers! So, switch it off
-        ourReturn$significance <- rep(FALSE, parametersLength);
-    }
+    ourReturn$significance <- !(parametersTable[,3]<=0 & parametersTable[,4]>=0);
 
     # If there is a likelihood, then produce ICs
     if(!is.na(logLik(object))){
@@ -873,7 +935,7 @@ summary.clm <- function(object, level=0.95, complex=TRUE, ...){
     ourReturn$adj.r.squared <- 1 - (1 - ourReturn$r.squared) * (obs - 1) / (dfTable[3]);
 
     ourReturn$dfTable <- dfTable;
-    ourReturn$s2 <- sigma(object)^2;
+    ourReturn$s2 <- sigma(object, type="matrix");
 
     ourReturn <- structure(ourReturn,class=c("summary.clm","summary.greybox"));
     return(ourReturn);
