@@ -981,7 +981,7 @@ print.summary.clm <- function(x, ...){
 #' @export
 plot.clm <- function(x, which=c(1,2,4,6), ...){
     # Amend the object to make it work with legion plots
-    x$Sigma <- sigma(x);
+    x$Sigma <- sigma(x, type="matrix");
     x$data <- complex2vec(actuals(x));
     x$fitted <- complex2vec(fitted(x));
     x$residuals <- complex2vec(residuals(x));
