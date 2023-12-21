@@ -92,6 +92,10 @@ cacf <- function(x, lag.max=NULL, method=c("direct","conjugate","pearson","kenda
                               "covariance"=ccov(xLagged[,1], xLagged[,i+1], method=method, na.rm=TRUE),
                               "correlation"=ccor(xLagged[,1], xLagged[,i+1], method=method, na.rm=TRUE));
         }
+        # Conjugate correlation does not have imaginary part. Drop it
+        if(method=="conjugate" && type=="correlation"){
+            xACF <- Re(xACF);
+        }
     }
     else{
         xACF <- vector("numeric", lag.max);
@@ -250,10 +254,15 @@ plot.cacf <- function(x, which=c(1,2), ask=length(which)>1, ...){
     }
     else{
         if(is.null(ellipsis$main)){
-            ellipsis$main <- switch(x$type,
-                                    "covariance"="Autocovariance of MDS of a complex variable",
-                                    "correlation"="Autocorrelation of MDS of a complex variable",
-                                    "partial"="Partial autocorrelation of MDS of a complex variable");
+            if(x$method!="conjugate"){
+                ellipsis$main <- switch(x$type,
+                                        "covariance"="Autocovariance of MDS of a complex variable",
+                                        "correlation"="Autocorrelation of MDS of a complex variable",
+                                        "partial"="Partial autocorrelation of MDS of a complex variable");
+            }
+            else{
+                ellipsis$main <-  "Conjugate autocorrelation of a complex variable";
+            }
         }
         if(is.null(ellipsis$ylab)){
             ellipsis$ylab <- switch(x$type,
