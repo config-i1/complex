@@ -267,12 +267,12 @@ plot.cacf <- function(x, which=c(1,2), ask=length(which)>1, level=0.95, ...){
         if(is.null(ellipsis$main)){
             if(x$method!="conjugate"){
                 ellipsis$main <- switch(x$type,
-                                        "covariance"="Autocovariance of MDS of a complex variable",
-                                        "correlation"=paste0("Autocorrelation (",x$method,") of MDS of a complex variable"),
-                                        "partial"="Partial autocorrelation of MDS of a complex variable");
+                                        "covariance"="Autocovariance function of MDS of a complex variable",
+                                        "correlation"=paste0("Autocorrelation (",x$method,") function of MDS of a complex variable"),
+                                        "partial"="Partial autocorrelation function of MDS of a complex variable");
             }
             else{
-                ellipsis$main <-  "Conjugate autocorrelation of a complex variable";
+                ellipsis$main <-  "Complex conjugate autocorrelation function";
             }
         }
         if(is.null(ellipsis$ylab)){

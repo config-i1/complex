@@ -121,21 +121,22 @@ ccor <- function(x, y, method=c("direct","conjugate","pearson","kendall", "spear
     method <- match.arg(method);
     if(any(method==c("direct","conjugate"))){
         if(is.matrix(x)){
-            ccov2cor(cvar(x, method=method, ...));
+            ccor <- ccov2cor(cvar(x, method=method, ...));
         }
         else{
-            switch(method,
-                   "conjugate"=sqrt((ccov(x, y, method=method, ...) * ccov(y, x, method=method, ...)) /
-                                     (cvar(x, method=method, ...)*cvar(y, method=method, ...))),
-                   "direct"=(ccov(y, x, method=method, ...) /
-                                    sqrt((cvar(x, method=method, ...)*cvar(y, method=method, ...)))));
+            ccor <- switch(method,
+                           "conjugate"=Re(sqrt((ccov(x, y, method=method, ...) * ccov(y, x, method=method, ...)) /
+                                                   (cvar(x, method=method, ...)*cvar(y, method=method, ...)))),
+                           "direct"=(ccov(y, x, method=method, ...) /
+                                         sqrt((cvar(x, method=method, ...)*cvar(y, method=method, ...)))));
         }
     }
     else{
         xScaled <- cmdscale(dist(complex2vec(x)), k=1)
         yScaled <- cmdscale(dist(complex2vec(y)), k=1)
-        cor(xScaled, yScaled, method=method, ...)
+        ccor <- cor(xScaled, yScaled, method=method, ...)
     }
+    return(ccor);
 }
 
 #' @param V complex (pseudo)covariance matrix.
