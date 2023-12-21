@@ -201,8 +201,8 @@ plot.cacf <- function(x, which=c(1,2), ask=length(which)>1, level=0.95, ...){
     ellipsis <- list(...);
 
     # Number of degrees of freedom: n-tau-1, where n-tau is the sample size
-    df <- length(x$n.used - 1:length(x$acf) - 1);
-    tValues <- qt((1+level)/2,df);
+    df <- (x$n.used - c(1:length(x$acf)) - 1);
+    tValues <- qt((1+level)/2,df=df);
     rCritical <- tValues/sqrt(100-2+tValues^2);
 
     if(x$method=="direct" || (x$method=="conjugate" && any(x$type==c("covariance","partial")))){
@@ -234,14 +234,14 @@ plot.cacf <- function(x, which=c(1,2), ask=length(which)>1, level=0.95, ...){
                 plot(Re(x$acf), type="h", xlab="Lag", ylab="Real CACF",
                      ylim=c(min(Re(x$acf),-1),max(Re(x$acf),1)));
                 abline(h=0);
-                abline(h=rCritical, col="blue", lty=2);
-                abline(h=-rCritical, col="blue", lty=2);
+                lines(rCritical, col="blue", lty=2);
+                lines(-rCritical, col="blue", lty=2);
 
                 plot(Im(x$acf), type="h", xlab="Lag", ylab="Imaginary CACF",
                      ylim=c(min(Im(x$acf),-1),max(Im(x$acf),1)));
                 abline(h=0);
-                abline(h=rCritical, col="blue", lty=2);
-                abline(h=-rCritical, col="blue", lty=2);
+                lines(rCritical, col="blue", lty=2);
+                lines(-rCritical, col="blue", lty=2);
             }
             if(i==2){
                 parDefault <- par(no.readonly=TRUE);
@@ -294,7 +294,7 @@ plot.cacf <- function(x, which=c(1,2), ask=length(which)>1, level=0.95, ...){
 
         do.call("plot", ellipsis);
         abline(h=0);
-        abline(h=rCritical, col="blue", lty=2);
-        abline(h=-rCritical, col="blue", lty=2);
+        lines(rCritical, col="blue", lty=2);
+        lines(-rCritical, col="blue", lty=2);
     }
 }
