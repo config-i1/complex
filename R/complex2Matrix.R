@@ -51,6 +51,10 @@
 #' @export
 complex2mat <- function(x){
     # Function creates a matrix based on the provided vector/matrix of complex variables
+    # Remove data frame. We don't care about the categorical variables...
+    if(is.data.frame(x)){
+        x <- as.matrix(x);
+    }
 
     if(is.matrix(x)){
         nrowX <- nrow(x);
@@ -90,6 +94,10 @@ complex2mat <- function(x){
 #' @export
 complex2vec <- function(x){
     # Function creates a vector (mathematical) based on the provided vector/matrix of complex variables
+    # Remove data frame. We don't care about the categorical variables...
+    if(is.data.frame(x)){
+        x <- as.matrix(x);
+    }
 
     if(is.matrix(x)){
         nrowX <- nrow(x);
@@ -121,6 +129,10 @@ complex2vec <- function(x){
 #' @export
 mat2complex <- function(x){
     # Function creates a matrix/vector of complex variables based on the provided vector/matrix
+    # Remove data frame. We don't care about the categorical variables...
+    if(is.data.frame(x)){
+        x <- as.matrix(x);
+    }
 
     if(is.matrix(x)){
         nrowX <- nrow(x);
@@ -150,6 +162,10 @@ mat2complex <- function(x){
 #' @export
 vec2complex <- function(x){
     # Function creates a complex vector/matrix based on the provided matrix
+    # Remove data frame. We don't care about the categorical variables...
+    if(is.data.frame(x)){
+        x <- as.matrix(x);
+    }
 
     if(is.matrix(x)){
         nrowX <- nrow(x);
