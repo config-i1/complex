@@ -2,7 +2,7 @@
 % Please edit documentation in R/cacf.R
 \name{cacf}
 \alias{cacf}
-\alias{pcacf}
+\alias{cpacf}
 \alias{print.cacf}
 \alias{plot.cacf}
 \title{Complex Correlation Function Estimation}
@@ -11,7 +11,7 @@ cacf(x, lag.max = NULL, method = c("direct", "conjugate", "pearson",
   "kendall", "spearman"), type = c("correlation", "covariance", "partial"),
   plot = TRUE, ...)
 
-pcacf(x, lag.max = NULL, method = c("direct", "conjugate", "pearson",
+cpacf(x, lag.max = NULL, method = c("direct", "conjugate", "pearson",
   "kendall", "spearman"), plot = TRUE, ...)
 
 \method{print}{cacf}(x, ...)
@@ -30,10 +30,10 @@ without the conjugate (i.e. "pseudo" moment). \code{method}
 can also be "pearson", "kendall", or "spearman", defining what correlation coefficient
 to use after the MDS transformation of complex variables \code{x} and \code{y}.}
 
-\item{type}{character string giving the type of CACF to be computed. Allowed values
+\item{type}{character string giving the type of cACF to be computed. Allowed values
 are "correlation" (the default) and "covariance". Will be partially matched.}
 
-\item{plot}{logical. If \code{TRUE} (the default) the CACF is plotted on complex plane
+\item{plot}{logical. If \code{TRUE} (the default) the cACF is plotted on complex plane
 and as two linear graphs for real and imaginary parts.}
 
 \item{...}{Parameter for the plot() function.}
@@ -49,8 +49,8 @@ coefficient.}
 \value{
 An object of class "cacf", which is a list with the following elements:
 \itemize{
-\item \code{lag} A three dimensional array containing the lags at which the CACF is estimated.
-\item \code{acf} An array with the same dimensions as lag containing the estimated CACF.
+\item \code{lag} A three dimensional array containing the lags at which the cACF is estimated.
+\item \code{acf} An array with the same dimensions as lag containing the estimated cACF.
 \item \code{method} The method used in calculation (same as the method argument).
 \item \code{type} The type of correlation (same as the type argument).
 \item \code{n.used} The number of observations in the time series.
@@ -69,7 +69,7 @@ lag 0. Also, the function will automatically remove NAs. Finally, function does 
 \code{demean} parameter (as, for example, is done in \link[stats]{acf}), because \code{ccov()}
 and \code{ccor()} do that automatically.
 
-\code{pcacf()} produces the partial complex ACF based on complex regression model of variable
+\code{cpacf()} produces the partial complex ACF based on complex regression model of variable
 on its lags.
 
 The generic function plot has a method for objects of class "cacf".
@@ -83,7 +83,7 @@ There is a print and plot methods for objects of class "cacf".
 # Generate random complex variables
 x <- complex(real=rnorm(100,10,10), imaginary=rnorm(100,10,10))
 
-# Calculate CACF
+# Calculate cACF
 cacf(x)
 
 }

@@ -10,7 +10,7 @@
 #' \code{demean} parameter (as, for example, is done in \link[stats]{acf}), because \code{ccov()}
 #' and \code{ccor()} do that automatically.
 #'
-#' \code{pcacf()} produces the partial complex ACF based on complex regression model of variable
+#' \code{cpacf()} produces the partial complex ACF based on complex regression model of variable
 #' on its lags.
 #'
 #' The generic function plot has a method for objects of class "cacf".
@@ -31,15 +31,15 @@
 #' without the conjugate (i.e. "pseudo" moment). \code{method}
 #' can also be "pearson", "kendall", or "spearman", defining what correlation coefficient
 #' to use after the MDS transformation of complex variables \code{x} and \code{y}.
-#' @param type character string giving the type of CACF to be computed. Allowed values
+#' @param type character string giving the type of cACF to be computed. Allowed values
 #' are "correlation" (the default) and "covariance". Will be partially matched.
-#' @param plot logical. If \code{TRUE} (the default) the CACF is plotted on complex plane
+#' @param plot logical. If \code{TRUE} (the default) the cACF is plotted on complex plane
 #' and as two linear graphs for real and imaginary parts.
 #'
 #' @return An object of class "cacf", which is a list with the following elements:
 #' \itemize{
-#' \item \code{lag} A three dimensional array containing the lags at which the CACF is estimated.
-#' \item \code{acf} An array with the same dimensions as lag containing the estimated CACF.
+#' \item \code{lag} A three dimensional array containing the lags at which the cACF is estimated.
+#' \item \code{acf} An array with the same dimensions as lag containing the estimated cACF.
 #' \item \code{method} The method used in calculation (same as the method argument).
 #' \item \code{type} The type of correlation (same as the type argument).
 #' \item \code{n.used} The number of observations in the time series.
@@ -53,10 +53,10 @@
 #' # Generate random complex variables
 #' x <- complex(real=rnorm(100,10,10), imaginary=rnorm(100,10,10))
 #'
-#' # Calculate CACF
+#' # Calculate cACF
 #' cacf(x)
 #'
-#' @rdname CACF
+#' @rdname cACF
 #' @importFrom stats cov
 #' @importFrom greybox xregExpander
 #' @export
@@ -69,7 +69,7 @@ cacf <- function(x, lag.max=NULL, method=c("direct","conjugate","pearson","kenda
     type <- match.arg(type);
 
     if(type=="partial"){
-        return(pcacf(x=x, lag.max=lag.max, plot=plot, method=method));
+        return(cpacf(x=x, lag.max=lag.max, plot=plot, method=method));
     }
 
     series <- deparse1(substitute(x))
@@ -120,10 +120,10 @@ cacf <- function(x, lag.max=NULL, method=c("direct","conjugate","pearson","kenda
     }
 }
 
-#' @rdname CACF
+#' @rdname cACF
 #' @importFrom stats pacf
 #' @export
-pcacf <- function(x, lag.max=NULL, method=c("direct","conjugate","pearson","kendall", "spearman"),
+cpacf <- function(x, lag.max=NULL, method=c("direct","conjugate","pearson","kendall", "spearman"),
                   plot=TRUE, ...){
     # Function is based on acf() from stats
 
@@ -179,7 +179,7 @@ pcacf <- function(x, lag.max=NULL, method=c("direct","conjugate","pearson","kend
 }
 
 #' @importFrom stats setNames
-#' @rdname CACF
+#' @rdname cACF
 #' @export
 print.cacf <- function(x, ...){
     cat("Complex Autocorrelations of series", x$series, "by lag\n\n");
@@ -195,7 +195,7 @@ print.cacf <- function(x, ...){
 #'
 #' @importFrom graphics layout text
 #' @importFrom grDevices devAskNewPage
-#' @rdname CACF
+#' @rdname cACF
 #' @export
 plot.cacf <- function(x, which=c(1,2), ask=length(which)>1, level=0.95, ...){
     ellipsis <- list(...);
@@ -204,13 +204,14 @@ plot.cacf <- function(x, which=c(1,2), ask=length(which)>1, level=0.95, ...){
     df <- (x$n.used - c(1:length(x$acf)) - 1);
     tValues <- qt((1+level)/2,df=df);
     rCritical <- tValues/sqrt(100-2+tValues^2);
+    xMethod <- paste(toupper(substr(x$method, 1, 1)), substr(x$method, 2, nchar(x$method)), sep="")
 
     if(x$method=="direct" || (x$method=="conjugate" && any(x$type==c("covariance","partial")))){
         if(is.null(ellipsis$main)){
             ellipsis$main <- switch(x$type,
-                                    "covariance"=paste0("Complex ",x$method," autocovariance function"),
-                                    "correlation"=paste0("Complex ",x$method," autocorrelation function"),
-                                    "partial"=paste0("Partial complex ",x$method," autocorrelation function"));
+                                    "covariance"=paste0(xMethod," complex autocovariance function"),
+                                    "correlation"=paste0(xMethod," complex autocorrelation function"),
+                                    "partial"=paste0(xMethod," complex partial autocorrelation function"));
         }
         mainLabel <- ellipsis$main;
         # Define, whether to wait for the hit of "Enter"
@@ -226,18 +227,18 @@ plot.cacf <- function(x, which=c(1,2), ask=length(which)>1, level=0.95, ...){
                 layout(matrix(c(1,2,1,3),2,2))
                 par(mar=c(4,4,4,2))
                 plot(x$acf, type="l",
-                     xlab="Real CACF", ylab="Imaginary CACF", main=mainLabel);
+                     xlab="Real cACF", ylab="Imaginary cACF", main=mainLabel);
                 points(x$acf);
                 text(Re(x$acf), Im(x$acf), c(1:length(x$acf)), pos=3);
 
                 par(mar=c(4,4,1,2))
-                plot(Re(x$acf), type="h", xlab="Lag", ylab="Real CACF",
+                plot(Re(x$acf), type="h", xlab="Lag", ylab="Real cACF",
                      ylim=c(min(Re(x$acf),-1),max(Re(x$acf),1)));
                 abline(h=0);
                 lines(rCritical, col="blue", lty=2);
                 lines(-rCritical, col="blue", lty=2);
 
-                plot(Im(x$acf), type="h", xlab="Lag", ylab="Imaginary CACF",
+                plot(Im(x$acf), type="h", xlab="Lag", ylab="Imaginary cACF",
                      ylim=c(min(Im(x$acf),-1),max(Im(x$acf),1)));
                 abline(h=0);
                 lines(rCritical, col="blue", lty=2);
@@ -250,15 +251,15 @@ plot.cacf <- function(x, which=c(1,2), ask=length(which)>1, level=0.95, ...){
                 layout(matrix(c(1,2,1,3),2,2))
                 par(mar=c(4,4,4,2))
                 plot(abs(x$acf), Arg(x$acf), type="l",
-                     xlab="Absolute of CACF", ylab="Argument of CACF", main=mainLabel);
+                     xlab="Absolute of cACF", ylab="Argument of cACF", main=mainLabel);
                 points(abs(x$acf), Arg(x$acf));
                 text(abs(x$acf), Arg(x$acf), c(1:length(x$acf)), pos=3);
 
                 par(mar=c(4,4,1,2))
-                plot(abs(x$acf), type="h", xlab="Lag", ylab="Absolute of CACF");
+                plot(abs(x$acf), type="h", xlab="Lag", ylab="Absolute of cACF");
                 abline(h=0);
 
-                plot(Arg(x$acf), type="h", xlab="Lag", ylab="Argument of CACF");
+                plot(Arg(x$acf), type="h", xlab="Lag", ylab="Argument of cACF");
                 abline(h=0);
             }
         }
@@ -268,11 +269,11 @@ plot.cacf <- function(x, which=c(1,2), ask=length(which)>1, level=0.95, ...){
             if(x$method!="conjugate"){
                 ellipsis$main <- switch(x$type,
                                         "covariance"="Autocovariance function of MDS of a complex variable",
-                                        "correlation"=paste0("Autocorrelation (",x$method,") function of MDS of a complex variable"),
+                                        "correlation"=paste0(xMethod, "autocorrelation function of MDS of a complex variable"),
                                         "partial"="Partial autocorrelation function of MDS of a complex variable");
             }
             else{
-                ellipsis$main <-  "Complex conjugate autocorrelation function";
+                ellipsis$main <-  "Conjugate complex autocorrelation function";
             }
         }
         if(is.null(ellipsis$ylab)){
