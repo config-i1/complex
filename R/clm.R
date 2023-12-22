@@ -399,7 +399,7 @@ clm <- function(formula, data, subset, na.action,
     interceptIsNeeded <- attr(dataTerms,"intercept")!=0;
     # Create a model from the provided stuff. This way we can work with factors
     dataWork <- model.matrix(dataWork,data=dataWork);
-    dataWork[,complexVariablesNames] <- originalData[,complexVariablesNames];
+    dataWork[,complexVariablesNames] <- as.matrix(originalData[,complexVariablesNames]);
     if(responseIsComplex){
         y <- originalData[,responseName]
     }
