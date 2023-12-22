@@ -60,7 +60,7 @@
 #' Y <- ts(cbind(rnorm(100,100,10),rnorm(100,75,8)),frequency=4)
 #'
 #' # The simplest model applied to the data with the default values
-#' CARModel <- CAR(Y,h=10,holdout=TRUE)
+#' CARModel <- car(Y,h=10,holdout=TRUE)
 #'
 #'
 #' @importFrom mvtnorm dmvnorm
@@ -72,7 +72,7 @@
 #' @import legion
 #'
 #' @export
-CAR <- function(data, order=NULL, max.order=frequency(data), restrict=TRUE,
+car <- function(data, order=NULL, max.order=frequency(data), restrict=TRUE,
                 h=13, holdout=TRUE, silent=TRUE,
                 ic=c("AIC","AICc","BIC","BICc")){
     # The function fits the restricted VAR, which corresponds to CAR. The likelihood is multivariate normal.
@@ -274,7 +274,7 @@ CAR <- function(data, order=NULL, max.order=frequency(data), restrict=TRUE,
                       nParam=parametersNumber, logLik=logLik, holdout=yHoldout, PI=NA, loss="likelihood",
                       lossValue=-logLik, logLik=logLik, Sigma=1/obsInSample * sum(t(errors) %*% errors),
                       accuracy=errorMeasures);
-        model <- structure(model,class=c("legion","smooth"));
+        model <- structure(model,class=c("legion","clm","greybox"));
         model$ICs <- c(AIC(model),AICc(model),BIC(model),BICc(model));
         names(model$ICs) <- c("AIC","AICc","BIC","BICc");
     }
