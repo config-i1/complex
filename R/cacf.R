@@ -62,7 +62,7 @@
 #' @export
 cacf <- function(x, lag.max=NULL, method=c("direct","conjugate","pearson","kendall", "spearman"),
                  type=c("correlation","covariance","partial"),
-                 plot=TRUE){
+                 plot=TRUE, ...){
     # Function is based on acf() from stats
 
     method <- match.arg(method);
@@ -92,6 +92,10 @@ cacf <- function(x, lag.max=NULL, method=c("direct","conjugate","pearson","kenda
                               "covariance"=ccov(xLagged[,1], xLagged[,i+1], method=method, na.rm=TRUE),
                               "correlation"=ccor(xLagged[,1], xLagged[,i+1], method=method, na.rm=TRUE));
         }
+        # Conjugate correlation does not have imaginary part. Drop it
+        if(method=="conjugate" && type=="correlation"){
+            xACF <- Re(xACF);
+        }
     }
     else{
         xACF <- vector("numeric", lag.max);
@@ -108,7 +112,7 @@ cacf <- function(x, lag.max=NULL, method=c("direct","conjugate","pearson","kenda
                               lag=c(1:lag.max), series=series), class="cacf");
 
     if(plot){
-        plot(acf.out, 1);
+        plot(acf.out, 1, ...);
         invisible(acf.out);
     }
     else{
@@ -120,7 +124,7 @@ cacf <- function(x, lag.max=NULL, method=c("direct","conjugate","pearson","kenda
 #' @importFrom stats pacf
 #' @export
 pcacf <- function(x, lag.max=NULL, method=c("direct","conjugate","pearson","kendall", "spearman"),
-                  plot=TRUE){
+                  plot=TRUE, ...){
     # Function is based on acf() from stats
 
     method <- match.arg(method);
@@ -166,7 +170,7 @@ pcacf <- function(x, lag.max=NULL, method=c("direct","conjugate","pearson","kend
                               lag=c(1:lag.max), series=series), class="cacf");
 
     if(plot){
-        plot(acf.out, 1);
+        plot(acf.out, 1, ...);
         invisible(acf.out);
     }
     else{
@@ -185,21 +189,28 @@ print.cacf <- function(x, ...){
 #' @param which Determines, which of the plots to produce. 1 is the plot of real
 #' and imaginary parts. 2 is the plot of absolute value and the argument.
 #' @param ask Determines, whether to ask before producing a new plot or not.
-#' @param ... Parameter needed for consistency with print() and plot() generics.
+#' @param level Confidence level for the non-rejection region of the correlation
+#' coefficient.
+#' @param ... Parameter for the plot() function.
 #'
 #' @importFrom graphics layout text
 #' @importFrom grDevices devAskNewPage
 #' @rdname CACF
 #' @export
-plot.cacf <- function(x, which=c(1,2), ask=length(which)>1, ...){
+plot.cacf <- function(x, which=c(1,2), ask=length(which)>1, level=0.95, ...){
     ellipsis <- list(...);
+
+    # Number of degrees of freedom: n-tau-1, where n-tau is the sample size
+    df <- (x$n.used - c(1:length(x$acf)) - 1);
+    tValues <- qt((1+level)/2,df=df);
+    rCritical <- tValues/sqrt(100-2+tValues^2);
 
     if(x$method=="direct" || (x$method=="conjugate" && any(x$type==c("covariance","partial")))){
         if(is.null(ellipsis$main)){
             ellipsis$main <- switch(x$type,
-                                    "covariance"="Complex autocovariance function",
-                                    "correlation"="Complex autocorrelation function",
-                                    "partial"="Partial complex autocorrelation function");
+                                    "covariance"=paste0("Complex ",x$method," autocovariance function"),
+                                    "correlation"=paste0("Complex ",x$method," autocorrelation function"),
+                                    "partial"=paste0("Partial complex ",x$method," autocorrelation function"));
         }
         mainLabel <- ellipsis$main;
         # Define, whether to wait for the hit of "Enter"
@@ -223,10 +234,14 @@ plot.cacf <- function(x, which=c(1,2), ask=length(which)>1, ...){
                 plot(Re(x$acf), type="h", xlab="Lag", ylab="Real CACF",
                      ylim=c(min(Re(x$acf),-1),max(Re(x$acf),1)));
                 abline(h=0);
+                lines(rCritical, col="blue", lty=2);
+                lines(-rCritical, col="blue", lty=2);
 
                 plot(Im(x$acf), type="h", xlab="Lag", ylab="Imaginary CACF",
                      ylim=c(min(Im(x$acf),-1),max(Im(x$acf),1)));
                 abline(h=0);
+                lines(rCritical, col="blue", lty=2);
+                lines(-rCritical, col="blue", lty=2);
             }
             if(i==2){
                 parDefault <- par(no.readonly=TRUE);
@@ -250,10 +265,15 @@ plot.cacf <- function(x, which=c(1,2), ask=length(which)>1, ...){
     }
     else{
         if(is.null(ellipsis$main)){
-            ellipsis$main <- switch(x$type,
-                                    "covariance"="Autocovariance of MDS of a complex variable",
-                                    "correlation"="Autocorrelation of MDS of a complex variable",
-                                    "partial"="Partial autocorrelation of MDS of a complex variable");
+            if(x$method!="conjugate"){
+                ellipsis$main <- switch(x$type,
+                                        "covariance"="Autocovariance function of MDS of a complex variable",
+                                        "correlation"=paste0("Autocorrelation (",x$method,") function of MDS of a complex variable"),
+                                        "partial"="Partial autocorrelation function of MDS of a complex variable");
+            }
+            else{
+                ellipsis$main <-  "Complex conjugate autocorrelation function";
+            }
         }
         if(is.null(ellipsis$ylab)){
             ellipsis$ylab <- switch(x$type,
@@ -273,7 +293,8 @@ plot.cacf <- function(x, which=c(1,2), ask=length(which)>1, ...){
         ellipsis$x <- x$acf;
 
         do.call("plot", ellipsis);
-
         abline(h=0);
+        lines(rCritical, col="blue", lty=2);
+        lines(-rCritical, col="blue", lty=2);
     }
 }

@@ -1,4 +1,4 @@
-complex v0.0.2 (Release data: 2023-04-19)
+complex v0.0.2 (Release data: 2023-12-21)
 
 Changes:
 * Added pseudo- (or "complex") variance, covariance and correlation, cvar, ccov and ccor functions respectively.
@@ -18,6 +18,7 @@ Changes:
 * Complex Normal distribution as a wrapper of a bivariate Normal one, using mvtnorm package.
 * sigma() now returns an object based on the provided type. This includes direct, conjugate and covariance matrix.
 * vcov() now returns direct or conjugate covariance matrices, or the proper covariance matrix (based on covariance matrix of the error term).
+* cacf() and pacf() now also return critical values of correlations (non-rejection region), the width of which is regulated via level parameter. These are based on the Student's t distribution.
 
 
 complex v0.0.1 (Release data: 2019-07-01)

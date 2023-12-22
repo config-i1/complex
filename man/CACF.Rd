@@ -9,14 +9,15 @@
 \usage{
 cacf(x, lag.max = NULL, method = c("direct", "conjugate", "pearson",
   "kendall", "spearman"), type = c("correlation", "covariance", "partial"),
-  plot = TRUE)
+  plot = TRUE, ...)
 
 pcacf(x, lag.max = NULL, method = c("direct", "conjugate", "pearson",
-  "kendall", "spearman"), plot = TRUE)
+  "kendall", "spearman"), plot = TRUE, ...)
 
 \method{print}{cacf}(x, ...)
 
-\method{plot}{cacf}(x, which = c(1, 2), ask = length(which) > 1, ...)
+\method{plot}{cacf}(x, which = c(1, 2), ask = length(which) > 1,
+  level = 0.95, ...)
 }
 \arguments{
 \item{x}{vector of complex variables.}
@@ -35,12 +36,15 @@ are "correlation" (the default) and "covariance". Will be partially matched.}
 \item{plot}{logical. If \code{TRUE} (the default) the CACF is plotted on complex plane
 and as two linear graphs for real and imaginary parts.}
 
-\item{...}{Parameter needed for consistency with print() and plot() generics.}
+\item{...}{Parameter for the plot() function.}
 
 \item{which}{Determines, which of the plots to produce. 1 is the plot of real
 and imaginary parts. 2 is the plot of absolute value and the argument.}
 
 \item{ask}{Determines, whether to ask before producing a new plot or not.}
+
+\item{level}{Confidence level for the non-rejection region of the correlation
+coefficient.}
 }
 \value{
 An object of class "cacf", which is a list with the following elements:
