@@ -144,9 +144,17 @@ ccor <- function(x, y, method=c("direct","conjugate","pearson","kendall", "spear
         }
     }
     else{
-        xScaled <- cmdscale(dist(complex2vec(x)), k=1)
-        yScaled <- cmdscale(dist(complex2vec(y)), k=1)
-        ccor <- cor(xScaled, yScaled, method=method, ...)
+        if(is.matrix(x)){
+            nvariables <- ncol(x);
+            xScaled <- cmdscale(dist(complex2vec(x)), k=nvariables);
+            colnames(xScaled) <- colnames(x);
+            ccor <- cor(xScaled, method=method, ...);
+        }
+        else{
+            xScaled <- cmdscale(dist(complex2vec(x)), k=1);
+            yScaled <- cmdscale(dist(complex2vec(y)), k=1);
+            ccor <- cor(xScaled, yScaled, method=method, ...);
+        }
     }
     return(ccor);
 }
