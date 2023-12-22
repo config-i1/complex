@@ -64,6 +64,8 @@ cacf <- function(x, lag.max=NULL, method=c("direct","conjugate","pearson","kenda
                  type=c("correlation","covariance","partial"),
                  plot=TRUE, ...){
     # Function is based on acf() from stats
+    # Remove names of observations - they cause issues with xregExpander().
+    names(x) <- NULL;
 
     method <- match.arg(method);
     type <- match.arg(type);
@@ -86,7 +88,7 @@ cacf <- function(x, lag.max=NULL, method=c("direct","conjugate","pearson","kenda
 
     if(any(method==c("direct","conjugate"))){
         xACF <- vector("complex", lag.max);
-        xLagged <- xregExpander(x, lags=c(-1:-lag.max), gaps="NAs");
+        xLagged <- xregExpander(x, lags=-c(1:lag.max), gaps="NAs");
         for(i in 1:lag.max){
             xACF[i] <- switch(type,
                               "covariance"=ccov(xLagged[,1], xLagged[,i+1], method=method, na.rm=TRUE),
@@ -100,7 +102,7 @@ cacf <- function(x, lag.max=NULL, method=c("direct","conjugate","pearson","kenda
     else{
         xACF <- vector("numeric", lag.max);
         xScaled <- cmdscale(dist(complex2vec(x)), k=1)
-        xLagged <- xregExpander(xScaled, lags=c(-1:-lag.max), gaps="NAs");
+        xLagged <- xregExpander(xScaled, lags=-c(1:lag.max), gaps="NAs");
         for(i in 1:lag.max){
             xACF[i] <- switch(type,
                               "covariance"=cov(xLagged[,1], xLagged[,i+1], method=method, use="complete.obs"),
@@ -126,6 +128,8 @@ cacf <- function(x, lag.max=NULL, method=c("direct","conjugate","pearson","kenda
 cpacf <- function(x, lag.max=NULL, method=c("direct","conjugate","pearson","kendall", "spearman"),
                   plot=TRUE, ...){
     # Function is based on acf() from stats
+    # Remove names of observations - they cause issues with xregExpander().
+    names(x) <- NULL;
 
     method <- match.arg(method);
     series <- deparse1(substitute(x))
@@ -140,7 +144,7 @@ cpacf <- function(x, lag.max=NULL, method=c("direct","conjugate","pearson","kend
         stop("'lag.max' must be at least 1");
     }
 
-    xLagged <- xregExpander(x, lags=c(-1:-lag.max), gaps="NAs");
+    xLagged <- xregExpander(x, lags=-c(1:lag.max), gaps="NAs");
     # Set the first column for the intercept
     xLagged[,1] <- 1;
     xPACF <- vector("complex", lag.max);
