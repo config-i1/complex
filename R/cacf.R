@@ -269,7 +269,7 @@ plot.cacf <- function(x, which=c(1,2), ask=length(which)>1, level=0.95, ...){
             if(x$method!="conjugate"){
                 ellipsis$main <- switch(x$type,
                                         "covariance"="Autocovariance function of MDS of a complex variable",
-                                        "correlation"=paste0(xMethod, "autocorrelation function of MDS of a complex variable"),
+                                        "correlation"=paste0(xMethod, " autocorrelation function of MDS of a complex variable"),
                                         "partial"="Partial autocorrelation function of MDS of a complex variable");
             }
             else{
