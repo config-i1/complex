@@ -52,6 +52,10 @@
 cvar <- function(x, method=c("direct","conjugate"),
                  df=NULL, ...){
     method <- match.arg(method);
+    # Remove data frame. We don't care about the categorical variables...
+    if(is.data.frame(x)){
+        x <- as.matrix(x);
+    }
     if(method=="direct"){
         if(is.matrix(x)){
             if(is.null(df)){
@@ -89,6 +93,10 @@ cvar <- function(x, method=c("direct","conjugate"),
 ccov <- function(x, y, method=c("direct","conjugate"),
                  df=NULL, ...){
     method <- match.arg(method);
+    # Remove data frame. We don't care about the categorical variables...
+    if(is.data.frame(x)){
+        x <- as.matrix(x);
+    }
     if(method=="direct"){
         if(is.matrix(x)){
             return(cvar(x, method=method, ...));
@@ -151,6 +159,10 @@ ccov2cor <- function(V){
 #' @rdname ccor
 #' @export
 covar <- function(x, df=NULL){
+    # Remove data frame. We don't care about the categorical variables...
+    if(is.data.frame(x)){
+        x <- as.matrix(x);
+    }
     if(is.complex(x)){
         x <- complex2vec(x);
     }
