@@ -127,6 +127,10 @@ ccov <- function(x, y, method=c("direct","conjugate"),
 ccor <- function(x, y, method=c("direct","conjugate","pearson","kendall", "spearman"),
                  ...){
     method <- match.arg(method);
+    # Remove data frame. We don't care about the categorical variables...
+    if(is.data.frame(x)){
+        x <- as.matrix(x);
+    }
     if(any(method==c("direct","conjugate"))){
         if(is.matrix(x)){
             ccor <- ccov2cor(cvar(x, method=method, ...));
