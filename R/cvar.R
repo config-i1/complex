@@ -138,7 +138,7 @@ ccor <- function(x, y, method=c("direct","conjugate","pearson","kendall", "spear
             }
             else if(method=="conjugate"){
                 # Take geometric mean of the two to fix the issue with conjugates
-                ccor <- ccov2cor(sqrt(cvar(x, method=method, ...) * cvar(Conj(x), method=method, ...)));
+                ccor <- Re(ccov2cor(sqrt(cvar(x, method=method, ...) * cvar(Conj(x), method=method, ...))));
             }
         }
         else{
