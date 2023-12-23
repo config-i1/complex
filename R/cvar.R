@@ -152,8 +152,11 @@ ccor <- function(x, y, method=c("direct","conjugate","pearson","kendall", "spear
     else{
         if(is.matrix(x)){
             nvariables <- ncol(x);
-            xScaled <- cmdscale(dist(complex2vec(x)), k=nvariables);
-            colnames(xScaled) <- colnames(x);
+            xScaled <- matrix(NA, nrow(x), nvariables,
+                              dimnames=list(NULL, colnames(x)));
+            for(i in 1:nvariables){
+                xScaled[,i] <- cmdscale(dist(complex2vec(x[,i])), k=1);
+            }
             ccor <- cor(xScaled, method=method, ...);
         }
         else{
