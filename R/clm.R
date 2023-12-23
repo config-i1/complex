@@ -191,9 +191,10 @@ clm <- function(formula, data, subset, na.action,
             fitterReturn <- fitter(B, y, matrixXreg);
             errors <- complex2vec(y - fitterReturn$mu);
             sigmaMat <- covar(errors, df=obsInsample);
-            # Concentrated logLik
-            CFValue <- obsInsample*(log(2*pi) + 1 + 0.5*log(det(sigmaMat)));
-            # CFValue <- obsInsample*(log(2*pi) + 0.5*log(det(sigmaMat))) + 0.5*sum(errors %*% Re(invert(sigmaMat)) %*% t(errors));
+            # # Concentrated logLik
+            # CFValue <- obsInsample*(log(2*pi) + 1 + 0.5*log(det(sigmaMat)));
+            # The correct one - concentrated does not work for whatever reason...
+            CFValue <- obsInsample*(log(2*pi) + 0.5*log(det(sigmaMat))) + 0.5*sum(errors %*% Re(invert(sigmaMat)) %*% t(errors));
         }
         else if(loss=="CLS"){
             fitterReturn <- fitter(B, y, matrixXreg);
