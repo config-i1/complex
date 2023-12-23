@@ -60,7 +60,7 @@
 dcnorm <- function(q, mu=0, sigma2=1, varsigma2=0, log=FALSE, ...){
 
     # Create a covariance matrix based on the provided variances
-    Sigma <- matrix(c((sigma2+Re(varsigma2)),Im(varsigma2),Im(varsigma2),(sigma2-Re(varsigma2)))/2, 2, 2);
+    Sigma <- Re(matrix(c((sigma2+Re(varsigma2)),Im(varsigma2),Im(varsigma2),(sigma2-Re(varsigma2)))/2, 2, 2));
 
     cnormReturn <- dmvnorm(complex2vec(q), mean=complex2vec(mu), sigma=Sigma, log=log, ...);
 
