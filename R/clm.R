@@ -193,8 +193,16 @@ clm <- function(formula, data, subset, na.action,
             sigmaMat <- covar(errors, df=obsInsample);
             # # Concentrated logLik
             # CFValue <- obsInsample*(log(2*pi) + 1 + 0.5*log(det(sigmaMat)));
-            # The correct one - concentrated does not work for whatever reason...
-            CFValue <- obsInsample*(log(2*pi) + 0.5*log(det(sigmaMat))) + 0.5*sum(errors %*% Re(invert(sigmaMat)) %*% t(errors));
+            # This is the correct one - concentrated does not work for whatever reason...
+            CFValue <- obsInsample*(log(2*pi) + 0.5*log(det(sigmaMat))) +
+                0.5*sum(diag(errors %*% Re(invert(sigmaMat)) %*% t(errors)));
+            ### Likelihood using dcnorm
+            # errors <- y - fitterReturn$mu;
+            # sigma2 <- mean(errors * Conj(errors));
+            # varsigma2 <- mean(errors^2);
+            # CFValue <- -sum(dcnorm(errors, mu=0, sigma2=sigma2, varsigma2=varsigma2, log=TRUE));
+            ### Likelihood using MVNorm
+            # CFValue <- -sum(dmvnorm(errors, mean=c(0,0), sigma=sigmaMat, log=TRUE));
         }
         else if(loss=="CLS"){
             fitterReturn <- fitter(B, y, matrixXreg);
