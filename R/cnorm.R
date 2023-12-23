@@ -64,11 +64,6 @@ dcnorm <- function(q, mu=0, sigma2=1, varsigma2=0, log=FALSE, ...){
 
     cnormReturn <- dmvnorm(complex2vec(q), mean=complex2vec(mu), sigma=Sigma, log=log, ...);
 
-    # Return logs if needed
-    if(log){
-        cnormReturn[] <- log(cnormReturn);
-    }
-
     return(cnormReturn);
 }
 
