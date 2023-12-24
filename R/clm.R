@@ -190,12 +190,13 @@ clm <- function(formula, data, subset, na.action,
             B <- complex(real=B[1:(nVariables/2)],imaginary=B[(nVariables/2+1):nVariables]);
             fitterReturn <- fitter(B, y, matrixXreg);
             errors <- complex2vec(y - fitterReturn$mu);
-            sigmaMat <- covar(errors, df=obsInsample);
+            sigmaMat <- t(errors) %*% errors / obsInsample;
             # # Concentrated logLik
-            # CFValue <- obsInsample*(log(2*pi) + 1 + 0.5*log(det(sigmaMat)));
-            # This is the correct one - concentrated does not work for whatever reason...
-            CFValue <- obsInsample*(log(2*pi) + 0.5*log(det(sigmaMat))) +
-                0.5*sum(diag(errors %*% Re(invert(sigmaMat)) %*% t(errors)));
+            CFValue <- obsInsample*(log(2*pi) + 1 + 0.5*log(det(sigmaMat)));
+
+            # Another options that give the same result
+            # CFValue <- obsInsample*(log(2*pi) + 0.5*log(det(sigmaMat))) +
+            #     0.5*sum(diag(errors %*% Re(invert(sigmaMat)) %*% t(errors)));
             ### Likelihood using dcnorm
             # errors <- y - fitterReturn$mu;
             # sigma2 <- mean(errors * Conj(errors));
