@@ -1087,7 +1087,7 @@ predict.clm <- function(object, newdata=NULL, interval=c("none", "confidence", "
 
         # Create a model from the provided stuff. This way we can work with factors
         matrixOfxreg <- model.matrix(newdataExpanded,data=newdataExpanded);
-        matrixOfxreg[,complexVariablesNames] <- originalData[,complexVariablesNames];
+        matrixOfxreg[,complexVariablesNames] <- as.matrix(originalData[,complexVariablesNames]);
         matrixOfxreg <- matrixOfxreg[,parametersNames,drop=FALSE];
     }
 
