@@ -394,21 +394,27 @@ clm <- function(formula, data, subset, na.action,
     responseName <- all.vars(formula)[1];
 
     dataWork <- eval(mf, parent.frame());
+
     #### Temporary solution for model.matrix() ####
-    complexVariables <- apply(dataWork, 2, is.complex);
+    if(is.data.frame(dataWork)){
+        complexVariables <- sapply(dataWork, is.complex);
+    }
+    else{
+        complexVariables <- apply(dataWork, 2, is.complex);
+    }
     complexVariablesNames <- names(complexVariables)[complexVariables];
     responseIsComplex <- any(responseName==complexVariablesNames);
     complexVariablesNames <- complexVariablesNames[complexVariablesNames!=responseName];
     # Save the original data to come back to it
     originalData <- dataWork;
-    dataWork[,] <- sapply(dataWork[,complexVariables], Re);
+    dataWork[,complexVariables] <- sapply(dataWork[,complexVariables], Re);
 
     dataTerms <- terms(dataWork);
     cl$formula <- formula(dataTerms);
 
     interceptIsNeeded <- attr(dataTerms,"intercept")!=0;
     # Create a model from the provided stuff. This way we can work with factors
-    dataWork <- model.matrix(dataWork,data=dataWork);
+    dataWork <- model.matrix(dataWork, data=dataWork);
     dataWork[,complexVariablesNames] <- as.matrix(originalData[,complexVariablesNames]);
     if(responseIsComplex){
         y <- originalData[,responseName]
@@ -1078,12 +1084,17 @@ predict.clm <- function(object, newdata=NULL, interval=c("none", "confidence", "
 
         #### Temporary solution for model.matrix() ####
         responseName <- all.vars(formula(object))[[1]];
-        complexVariables <- apply(newdataExpanded, 2, is.complex);
+        if(is.data.frame(newdataExpanded)){
+            complexVariables <- sapply(newdataExpanded, is.complex);
+        }
+        else{
+            complexVariables <- apply(newdataExpanded, 2, is.complex);
+        }
         complexVariablesNames <- names(complexVariables)[complexVariables];
         complexVariablesNames <- complexVariablesNames[complexVariablesNames!=responseName];
         # Save the original data to come back to it
         originalData <- newdataExpanded;
-        newdataExpanded[,] <- sapply(newdataExpanded[,complexVariables], Re);
+        newdataExpanded[,complexVariables] <- sapply(newdataExpanded[,complexVariables], Re);
 
         # Create a model from the provided stuff. This way we can work with factors
         matrixOfxreg <- model.matrix(newdataExpanded,data=newdataExpanded);
