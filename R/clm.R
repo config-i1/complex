@@ -415,7 +415,11 @@ clm <- function(formula, data, subset, na.action,
     interceptIsNeeded <- attr(dataTerms,"intercept")!=0;
     # Create a model from the provided stuff. This way we can work with factors
     dataWork <- model.matrix(dataWork, data=dataWork);
-    dataWork[,complexVariablesNames] <- as.matrix(originalData[,complexVariablesNames]);
+    # And this small function will do all necessary transformations of complex variables
+    dataWorkComplex <- cmodel.matrix(originalData, data=originalData);
+    #### FIX: Get interraction effects and substitute non-zeroes with the correct values ####
+    complexVariablesNamesUsed <- complexVariablesNames[complexVariablesNames %in% colnames(dataWork)];
+    dataWork[,complexVariablesNamesUsed] <- dataWorkComplex[,complexVariablesNamesUsed];
     if(responseIsComplex){
         y <- originalData[,responseName]
     }
@@ -1098,7 +1102,9 @@ predict.clm <- function(object, newdata=NULL, interval=c("none", "confidence", "
 
         # Create a model from the provided stuff. This way we can work with factors
         matrixOfxreg <- model.matrix(newdataExpanded,data=newdataExpanded);
-        matrixOfxreg[,complexVariablesNames] <- as.matrix(originalData[,complexVariablesNames]);
+    # And this small function will do all necessary transformations of complex variables
+        matrixOfxregComplex <- cmodel.matrix(originalData, data=originalData);
+        matrixOfxreg[,complexVariablesNames] <- as.matrix(matrixOfxregComplex[,complexVariablesNames]);
         matrixOfxreg <- matrixOfxreg[,parametersNames,drop=FALSE];
     }
 
