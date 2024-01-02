@@ -403,7 +403,6 @@ clm <- function(formula, data, subset, na.action,
         complexVariables <- apply(dataWork, 2, is.complex);
     }
     complexVariablesNames <- names(complexVariables)[complexVariables];
-    # responseIsComplex <- any(responseName==complexVariablesNames);
     complexVariablesNames <- complexVariablesNames[complexVariablesNames!=responseName];
     # Save the original data to come back to it
     originalData <- dataWork;
@@ -419,7 +418,7 @@ clm <- function(formula, data, subset, na.action,
     dataWorkComplex <- cmodel.matrix(originalData, data=originalData);
     #### FIX: Get interraction effects and substitute non-zeroes with the correct values ####
     complexVariablesNamesUsed <- complexVariablesNames[complexVariablesNames %in% colnames(dataWork)];
-    dataWork[,complexVariablesNamesUsed] <- dataWorkComplex[,complexVariablesNamesUsed];
+    dataWork[,complexVariablesNamesUsed] <- as.matrix(dataWorkComplex[,complexVariablesNamesUsed]);
     y <- dataWorkComplex[,1];
     obsInsample <- nrow(dataWork);
 
