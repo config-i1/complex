@@ -403,7 +403,7 @@ clm <- function(formula, data, subset, na.action,
         complexVariables <- apply(dataWork, 2, is.complex);
     }
     complexVariablesNames <- names(complexVariables)[complexVariables];
-    responseIsComplex <- any(responseName==complexVariablesNames);
+    # responseIsComplex <- any(responseName==complexVariablesNames);
     complexVariablesNames <- complexVariablesNames[complexVariablesNames!=responseName];
     # Save the original data to come back to it
     originalData <- dataWork;
@@ -420,23 +420,17 @@ clm <- function(formula, data, subset, na.action,
     #### FIX: Get interraction effects and substitute non-zeroes with the correct values ####
     complexVariablesNamesUsed <- complexVariablesNames[complexVariablesNames %in% colnames(dataWork)];
     dataWork[,complexVariablesNamesUsed] <- dataWorkComplex[,complexVariablesNamesUsed];
-    if(responseIsComplex){
-        y <- originalData[,responseName]
-    }
+    y <- dataWorkComplex[,1];
     obsInsample <- nrow(dataWork);
 
     # matrixXreg should not contain 1 for the further checks
     if(interceptIsNeeded){
         variablesNames <- colnames(dataWork)[-1];
         matrixXreg <- as.matrix(dataWork[,-1,drop=FALSE]);
-        # Include response to the data
-        # dataWork <- cbind(y,dataWork[,-1,drop=FALSE]);
     }
     else{
         variablesNames <- colnames(dataWork);
         matrixXreg <- dataWork;
-        # Include response to the data
-        # dataWork <- cbind(y,dataWork);
         warning("You have asked not to include intercept in the model. We will try to fit the model, ",
                 "but this is a very naughty thing to do, and we cannot guarantee that it will work...", call.=FALSE);
     }
