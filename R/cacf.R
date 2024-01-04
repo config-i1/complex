@@ -228,25 +228,45 @@ plot.cacf <- function(x, which=c(1,2), ask=length(which)>1, level=0.95, ...){
                 parDefault <- par(no.readonly=TRUE);
                 on.exit(par(parDefault),add=TRUE);
 
-                layout(matrix(c(1,2,1,3),2,2))
-                par(mar=c(4,4,4,2))
-                plot(x$acf, type="l",
-                     xlab="Real cACF", ylab="Imaginary cACF", main=mainLabel);
-                points(x$acf);
+                xRange <- c(min(Re(x$acf),-1),max(Re(x$acf),1))
+                yRange <- c(min(Im(x$acf),-1),max(Im(x$acf),1))
+                layout(matrix(c(1,2,1,3),2,2));
+                par(mar=c(4,4,4,2));
+                plot(x$acf, type="b",
+                     xlab="Real cACF", ylab="Imaginary cACF", main=mainLabel,
+                     xlim=xRange, ylim=yRange);
+                abline(h=0, col="grey", lty=2);
+                abline(v=0, col="grey", lty=2);
+                abline(h=c(-1,1)*rCritical, col="red", lty=2);
+                abline(v=c(-1,1)*rCritical, col="red", lty=2);
                 text(Re(x$acf), Im(x$acf), c(1:length(x$acf)), pos=3);
 
                 par(mar=c(4,4,1,2))
                 plot(Re(x$acf), type="h", xlab="Lag", ylab="Real cACF",
-                     ylim=c(min(Re(x$acf),-1),max(Re(x$acf),1)));
+                     ylim=xRange);
                 abline(h=0);
-                lines(rCritical, col="blue", lty=2);
-                lines(-rCritical, col="blue", lty=2);
+                lines(rCritical, col="red", lty=2);
+                lines(-rCritical, col="red", lty=2);
+                # Add text for the significant ones
+                signigicantOnes <- which(abs(Re(x$acf))>rCritical);
+                if(length(signigicantOnes)>0){
+                    acfSignificant <- Re(x$acf)[signigicantOnes];
+                    points(signigicantOnes, acfSignificant, pch=16);
+                    text(signigicantOnes, acfSignificant, signigicantOnes, pos=c(1,3)[(acfSignificant>0)*1+1]);
+                }
 
                 plot(Im(x$acf), type="h", xlab="Lag", ylab="Imaginary cACF",
-                     ylim=c(min(Im(x$acf),-1),max(Im(x$acf),1)));
+                     ylim=yRange);
                 abline(h=0);
-                lines(rCritical, col="blue", lty=2);
-                lines(-rCritical, col="blue", lty=2);
+                lines(rCritical, col="red", lty=2);
+                lines(-rCritical, col="red", lty=2);
+                # Add text for the significant ones
+                signigicantOnes <- which(abs(Im(x$acf))>rCritical);
+                if(length(signigicantOnes)>0){
+                    acfSignificant <- Im(x$acf)[signigicantOnes];
+                    points(signigicantOnes, acfSignificant, pch=16);
+                    text(signigicantOnes, acfSignificant, signigicantOnes, pos=c(1,3)[(acfSignificant>0)*1+1]);
+                }
             }
             if(i==2){
                 parDefault <- par(no.readonly=TRUE);
@@ -254,9 +274,9 @@ plot.cacf <- function(x, which=c(1,2), ask=length(which)>1, level=0.95, ...){
 
                 layout(matrix(c(1,2,1,3),2,2))
                 par(mar=c(4,4,4,2))
-                plot(abs(x$acf), Arg(x$acf), type="l",
+                plot(abs(x$acf), Arg(x$acf), type="b",
                      xlab="Absolute of cACF", ylab="Argument of cACF", main=mainLabel);
-                points(abs(x$acf), Arg(x$acf));
+                # points(abs(x$acf), Arg(x$acf));
                 text(abs(x$acf), Arg(x$acf), c(1:length(x$acf)), pos=3);
 
                 par(mar=c(4,4,1,2))
@@ -299,7 +319,7 @@ plot.cacf <- function(x, which=c(1,2), ask=length(which)>1, level=0.95, ...){
 
         do.call("plot", ellipsis);
         abline(h=0);
-        lines(rCritical, col="blue", lty=2);
-        lines(-rCritical, col="blue", lty=2);
+        lines(rCritical, col="red", lty=2);
+        lines(-rCritical, col="red", lty=2);
     }
 }
