@@ -320,7 +320,7 @@ plot.cacf <- function(x, which=c(1,2), ask=length(which)>1, level=0.95, ...){
         do.call("plot", ellipsis);
         abline(h=0);
         lines(rCritical, col="red", lty=2);
-        lines(-rCritical, col="red", lty=2);
+        # lines(-rCritical, col="red", lty=2);
 
         # Add text for the significant ones
         signigicantOnes <- which(abs(x$acf)>rCritical);
