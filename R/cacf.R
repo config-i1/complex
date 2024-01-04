@@ -321,5 +321,13 @@ plot.cacf <- function(x, which=c(1,2), ask=length(which)>1, level=0.95, ...){
         abline(h=0);
         lines(rCritical, col="red", lty=2);
         lines(-rCritical, col="red", lty=2);
+
+        # Add text for the significant ones
+        signigicantOnes <- which(abs(x$acf)>rCritical);
+        if(length(signigicantOnes)>0){
+            acfSignificant <- x$acf[signigicantOnes];
+            points(signigicantOnes, acfSignificant, pch=16);
+            text(signigicantOnes, acfSignificant, signigicantOnes, pos=c(1,3)[(acfSignificant>0)*1+1]);
+        }
     }
 }
