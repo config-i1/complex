@@ -71,7 +71,7 @@
 #' @import smooth
 #' @import legion
 #'
-#' @export
+# @export
 car <- function(data, order=NULL, max.order=frequency(data), restrict=TRUE,
                 h=13, holdout=TRUE, silent=TRUE,
                 ic=c("AIC","AICc","BIC","BICc")){
