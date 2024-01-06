@@ -41,6 +41,7 @@
 #' \code{lossFunction <- function(actual, fitted, B, xreg) return(mean(abs(actual-fitted)))}
 #' \code{loss=lossFunction}
 #'
+#' @param orders The vector of orders of complex ARIMA(p,d,q).
 #' @param parameters vector of parameters of the linear model. When \code{NULL}, it
 #' is estimated.
 #' @param fast if \code{TRUE}, then the function won't check whether
@@ -118,13 +119,20 @@
 #' complexModel <- clm(y~x, complexData)
 #' summary(complexModel)
 #'
+#' plot(complexModel, 7)
+#'
 #' @importFrom nloptr nloptr
 #' @importFrom stats model.frame sd terms model.matrix update.formula as.formula
 #' @importFrom stats formula residuals sigma
+#' @importFrom graphics abline lines par points
+#' @importFrom stats AIC BIC contrasts<- deltat fitted frequency start time ts
+#' @importFrom greybox AICc BICc measures
+#' @import legion
 #' @rdname clm
 #' @export clm
 clm <- function(formula, data, subset, na.action,
                 loss=c("OLS","CLS","likelihood","MSE","MAE","HAM"),
+                orders=c(0,0,0),
                 parameters=NULL, fast=FALSE, ...){
     # Start measuring the time of calculations
     startTime <- Sys.time();
@@ -167,8 +175,12 @@ clm <- function(formula, data, subset, na.action,
         if(loss=="CLS"){
             scale <- sqrt(sum((y-mu)^2)/obsInsample)
         }
-        else{
+        else if(loss=="OLS"){
             scale <- Re(sqrt(sum(Conj((y-mu))*(y-mu))/obsInsample));
+        }
+        else if(loss=="likelihood"){
+            errors <- complex2vec(y-mu);
+            scale <- t(errors) %*% errors / obsInsample;
         }
 
         return(list(mu=mu,scale=scale));
@@ -189,10 +201,8 @@ clm <- function(formula, data, subset, na.action,
         if(loss=="likelihood"){
             B <- complex(real=B[1:(nVariables/2)],imaginary=B[(nVariables/2+1):nVariables]);
             fitterReturn <- fitter(B, y, matrixXreg);
-            errors <- complex2vec(y - fitterReturn$mu);
-            sigmaMat <- t(errors) %*% errors / obsInsample;
             # # Concentrated logLik
-            CFValue <- obsInsample*(log(2*pi) + 1 + 0.5*log(det(sigmaMat)));
+            CFValue <- obsInsample*(log(2*pi) + 1 + 0.5*log(det(fitterReturn$scale)));
 
             # Another options that give the same result
             # CFValue <- obsInsample*(log(2*pi) + 0.5*log(det(sigmaMat))) +

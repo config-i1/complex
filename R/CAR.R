@@ -1,76 +1,76 @@
-#' Complex Autoregression
-#'
-#' Function constructs Complex Autoregression model as a restricted VAR for a
-#' provided pair time series.
-#'
-#' The CAR(p) model can be written as a VAR(p) model with the following
-#' restrictions on the proportionality matrices:
-#' \deqn{
-#' A_j = \begin{matrix} a_{j,1} & -a_{j,2} \\ a_{j,2} & a_{j,1} \end{matrix}
-#' }{
-#' A_j =
-#' [ a_{j,1} | -a_{j,2} ]
-#' [ a_{j,2} |  a_{j,1} ]
-#' }
-#'
-#' @template author
-#' @template references
-#'
-#' @keywords univar ts models regression
-#'
-#' @param data the pair of the time series (the matrix) in columns.
-#' @param order the order p of the model. If \code{NULL}, then it is selected
-#' automatically based on the selected information criterion.
-#' @param restrict if \code{FALSE}, then VAR(p) is constructed instead of CAR(p).
-#' @param max.order The maximum order to consider.
-#' @param h length of forecasting horizon.
-#' @param holdout if \code{TRUE}, holdout sample of size \code{h} is taken from
-#' the end of the data.
-#' nothing happens.
-#' @param silent if \code{TRUE}, then the plot is produced. Otherwise nothing happens.
-#' @param ic the information criterion used in the model selection procedure.
-#'
-#' @return Object of class "vsmooth" is returned. It contains the following list of
-#' values:
-#' \itemize{
-#' \item \code{model} - The name of the fitted model;
-#' \item \code{timeElapsed} - The time elapsed for the construction of the model;
-#' \item \code{coefficients} - The vector of all the estimated coefficients;
-#' \item \code{nParam} - The number of estimated parameters;
-#' \item \code{data} - The matrix with the original data;
-#' \item \code{fitted} - The matrix of the fitted values;
-#' \item \code{holdout} - The matrix with the holdout values (if \code{holdout=TRUE} in
-#' the estimation);
-#' \item \code{residuals} - The matrix of the residuals of the model;
-#' \item \code{forecast} - The matrix of point forecasts;
-#' \item \code{Sigma} - The covariance matrix of the errors (estimated with the correction
-#' for the number of degrees of freedom);
-#' \item \code{ICs} - The values of the information criteria for the selected model;
-#' \item \code{logLik} - The log-likelihood function;
-#' \item \code{lossValue} - The value of the loss function;
-#' \item \code{loss} - The type of the used loss function;
-#' \item \code{accuracy} - the values of the error measures. Currently not available.
-#' \item \code{ICsAll} - In case of the order selection, the values of information
-#' criteria for the tested models.
-#' }
-#' @seealso \code{\link[legion]{ves}}
-#'
-#' @examples
-#'
-#' Y <- ts(cbind(rnorm(100,100,10),rnorm(100,75,8)),frequency=4)
-#'
-#' # The simplest model applied to the data with the default values
-#' CARModel <- car(Y,h=10,holdout=TRUE)
-#'
-#'
-#' @importFrom mvtnorm dmvnorm
-#' @importFrom nloptr nloptr
-#' @importFrom greybox AICc BICc measures
-#' @importFrom graphics abline lines par plot points
-#' @importFrom stats AIC BIC deltat frequency start time ts fitted
-#' @import smooth
-#' @import legion
-#'
+# Complex Autoregression
+#
+# Function constructs Complex Autoregression model as a restricted VAR for a
+# provided pair time series.
+#
+# The CAR(p) model can be written as a VAR(p) model with the following
+# restrictions on the proportionality matrices:
+# \deqn{
+# A_j = \begin{matrix} a_{j,1} & -a_{j,2} \\ a_{j,2} & a_{j,1} \end{matrix}
+# }{
+# A_j =
+# [ a_{j,1} | -a_{j,2} ]
+# [ a_{j,2} |  a_{j,1} ]
+# }
+#
+# @template author
+# @template references
+#
+# @keywords univar ts models regression
+#
+# @param data the pair of the time series (the matrix) in columns.
+# @param order the order p of the model. If \code{NULL}, then it is selected
+# automatically based on the selected information criterion.
+# @param restrict if \code{FALSE}, then VAR(p) is constructed instead of CAR(p).
+# @param max.order The maximum order to consider.
+# @param h length of forecasting horizon.
+# @param holdout if \code{TRUE}, holdout sample of size \code{h} is taken from
+# the end of the data.
+# nothing happens.
+# @param silent if \code{TRUE}, then the plot is produced. Otherwise nothing happens.
+# @param ic the information criterion used in the model selection procedure.
+#
+# @return Object of class "vsmooth" is returned. It contains the following list of
+# values:
+# \itemize{
+# \item \code{model} - The name of the fitted model;
+# \item \code{timeElapsed} - The time elapsed for the construction of the model;
+# \item \code{coefficients} - The vector of all the estimated coefficients;
+# \item \code{nParam} - The number of estimated parameters;
+# \item \code{data} - The matrix with the original data;
+# \item \code{fitted} - The matrix of the fitted values;
+# \item \code{holdout} - The matrix with the holdout values (if \code{holdout=TRUE} in
+# the estimation);
+# \item \code{residuals} - The matrix of the residuals of the model;
+# \item \code{forecast} - The matrix of point forecasts;
+# \item \code{Sigma} - The covariance matrix of the errors (estimated with the correction
+# for the number of degrees of freedom);
+# \item \code{ICs} - The values of the information criteria for the selected model;
+# \item \code{logLik} - The log-likelihood function;
+# \item \code{lossValue} - The value of the loss function;
+# \item \code{loss} - The type of the used loss function;
+# \item \code{accuracy} - the values of the error measures. Currently not available.
+# \item \code{ICsAll} - In case of the order selection, the values of information
+# criteria for the tested models.
+# }
+# @seealso \code{\link[legion]{ves}}
+#
+# @examples
+#
+# Y <- ts(cbind(rnorm(100,100,10),rnorm(100,75,8)),frequency=4)
+#
+# # The simplest model applied to the data with the default values
+# CARModel <- car(Y,h=10,holdout=TRUE)
+#
+#
+# @importFrom mvtnorm dmvnorm
+# @importFrom nloptr nloptr
+# @importFrom greybox AICc BICc measures
+# @importFrom graphics abline lines par plot points
+# @importFrom stats AIC BIC deltat frequency start time ts fitted
+# @import smooth
+# @import legion
+#
 # @export
 car <- function(data, order=NULL, max.order=frequency(data), restrict=TRUE,
                 h=13, holdout=TRUE, silent=TRUE,
@@ -126,7 +126,7 @@ car <- function(data, order=NULL, max.order=frequency(data), restrict=TRUE,
                 cat(paste0(rep("\b",nchar(round((i-1)/max.order,2)*100)+1),collapse=""));
                 cat(paste0(round(i/max.order,2)*100,"%"));
             }
-            CARmodels[[i]] <- CAR(data=data, order=i, h=h, holdout=holdout, restrict=TRUE);
+            CARmodels[[i]] <- car(data=data, order=i, h=h, holdout=holdout, restrict=TRUE);
         }
 
         if(!silent){
