@@ -559,6 +559,78 @@ clm <- function(formula, data, subset, na.action,
     # The number of exogenous variables
     nVariablesExo <- nVariables;
 
+    #### ARIMA orders ####
+    arOrder <- orders[1];
+    iOrder <- orders[2];
+    #### !!! This is not implemented yet
+    maOrder <- orders[3];
+    #### !!!
+    # Check AR, I and form ARI order
+    if(arOrder<0){
+        warning("ar must be positive. Taking the absolute value.", call.=FALSE);
+        arOrder <- abs(arOrder);
+    }
+    if(length(iOrder)>1){
+        warning("i must be positive. Taking the absolute value.", call.=FALSE);
+        iOrder <- abs(iOrder);
+    }
+    ariOrder <- arOrder + iOrder;
+    arimaModel <- ifelseFast(ariOrder>0, TRUE, FALSE) || ifelseFast(maOrder>0, TRUE, FALSE);
+
+    # Permutations for the ARIMA
+    if(arimaModel){
+        # Create polynomials for the ar, i and ma orders
+        if(arOrder>0){
+            poly1 <- rep(1,arOrder+1);
+        }
+        else{
+            poly1 <- c(1,1);
+        }
+        if(iOrder>0){
+            poly2 <- c(1,-1);
+            if(iOrder>1){
+                for(j in 1:(iOrder-1)){
+                    poly2 <- polyprod(poly2,c(1,-1));
+                }
+            }
+        }
+        if(maOrder>0){
+            poly3 <- rep(1,maOrder+1);
+        }
+        else{
+            poly3 <- c(1,1);
+        }
+
+        # Expand the response variable to have ARI
+        ariElements <- xregExpander(complex2vec(y), lags=-c(1:ariOrder), gaps="auto")[,-c(1,ariOrder+2),drop=FALSE];
+        ariElements <- vec2complex(ariElements[,rep(1:ariOrder,each=2)+rep(c(0,ariOrder),ariOrder)]);
+
+        # Fix names of lags
+        # class(ariElements) <- "matrix";
+        ariNames <- paste0(responseName,"Lag",c(1:ariOrder));
+        colnames(ariElements) <- ariNames;
+        variablesNamesAll <- c(variablesNames,ariNames);
+
+        # Adjust number of variables
+        nVariables <- nVariables + arOrder;
+
+        # Give names to AR elements
+        if(arOrder>0){
+            arNames <- paste0(responseName,"Lag",c(1:arOrder));
+            variablesNames <- c(variablesNames,arNames);
+        }
+        else{
+            arNames <- vector("character",0);
+        }
+
+        # Fill in zeroes with the mean values
+        ariElements[ariElements==0] <- mean(ariElements[ariElements[,1]!=0,1]);
+
+        # Add ARI elements to the design matrix
+        matrixXreg <- cbind(matrixXreg, ariElements);
+    }
+
+
     #### Estimate parameters of the model ####
     if(is.null(parameters)){
         if(loss=="CLS"){

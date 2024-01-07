@@ -1,4 +1,4 @@
-complex v0.0.2 (Release data: 2024-01-01)
+complex v0.0.2 (Release data: 2024-01-07)
 
 Changes:
 * Added pseudo- (or "complex") variance, covariance and correlation, cvar, ccov and ccor functions respectively.
@@ -20,6 +20,7 @@ Changes:
 * vcov() now returns direct or conjugate covariance matrices, or the proper covariance matrix (based on covariance matrix of the error term).
 * cacf() and pacf() now also return critical values of correlations (non-rejection region), the width of which is regulated via level parameter. These are based on the Student's t distribution.
 * clm() now supports log() etc in the formula. Interraction effects are still wrong.
+* orders in clm(), allowing to specify ARIMA(p,d,q) orders. Curently only ARIMA(p,d,0) is supported.
 
 
 complex v0.0.1 (Release data: 2019-07-01)
