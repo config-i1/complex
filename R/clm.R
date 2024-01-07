@@ -123,10 +123,12 @@
 #'
 #' @importFrom nloptr nloptr
 #' @importFrom stats model.frame sd terms model.matrix update.formula as.formula
-#' @importFrom stats formula residuals sigma
+#' @importFrom stats formula residuals sigma rnorm
 #' @importFrom graphics abline lines par points
 #' @importFrom stats AIC BIC contrasts<- deltat fitted frequency start time ts
 #' @importFrom greybox AICc BICc measures
+#' @importFrom pracma hessian
+#' @importFrom utils tail
 #' @import legion
 #' @rdname clm
 #' @export clm
@@ -169,6 +171,29 @@ clm <- function(formula, data, subset, na.action,
 
     # Basic fitter for non-dynamic models
     fitter <- function(B, y, matrixXreg){
+
+        if(loss!="OLS" && loss!="CLS"){
+            B <- complex(real=B[1:(nVariables/2)],imaginary=B[(nVariables/2+1):nVariables]);
+        }
+
+        # If there is ARIMA, then calculate polynomials
+        if(arimaModel){
+            poly1[-1] <- -tail(B,arOrder);
+            # This condition is needed for cases of only ARI models
+            if(nVariables>arOrder){
+                B <- c(B[1:(length(B)-arOrder)], -polyprodcomplex(poly2,poly1)[-1]);
+            }
+            else{
+                B <- -polyprodcomplex(poly2,poly1)[-1];
+            }
+        }
+        else if(iOrder>0){
+            B <- c(B, -poly2[-1]);
+        }
+        else if(arOrder>0){
+            poly1[-1] <- -tail(B,arOrder);
+        }
+
         mu[] <- matrixXreg %*% B
 
         # Get the scale value
@@ -197,10 +222,9 @@ clm <- function(formula, data, subset, na.action,
     }
 
     CF <- function(B, loss, y, matrixXreg){
+        fitterReturn <- fitter(B, y, matrixXreg);
 
         if(loss=="likelihood"){
-            B <- complex(real=B[1:(nVariables/2)],imaginary=B[(nVariables/2+1):nVariables]);
-            fitterReturn <- fitter(B, y, matrixXreg);
             # # Concentrated logLik
             CFValue <- obsInsample*(log(2*pi) + 1 + 0.5*log(det(fitterReturn$scale)));
 
@@ -216,16 +240,12 @@ clm <- function(formula, data, subset, na.action,
             # CFValue <- -sum(dmvnorm(errors, mean=c(0,0), sigma=sigmaMat, log=TRUE));
         }
         else if(loss=="CLS"){
-            fitterReturn <- fitter(B, y, matrixXreg);
             CFValue <- sum((y - fitterReturn$mu)^2);
         }
         else if(loss=="OLS"){
-            fitterReturn <- fitter(B, y, matrixXreg);
             CFValue <- sum(abs(y - fitterReturn$mu)^2);
         }
         else{
-            B <- complex(real=B[1:(nVariables/2)],imaginary=B[(nVariables/2+1):nVariables]);
-            fitterReturn <- fitter(B, y, matrixXreg);
             yFitted[] <- extractorFitted(fitterReturn$mu, fitterReturn$scale);
 
             if(loss=="MSE"){
@@ -467,8 +487,8 @@ clm <- function(formula, data, subset, na.action,
     errors <- vector("numeric", obsInsample);
     ot <- vector("logical", obsInsample);
 
+    #### Checks of the exogenous variables ####
     if(!fast){
-        #### Checks of the exogenous variables ####
         # Remove the data for which sd=0
         noVariability <- vector("logical",nVariables);
         noVariability[] <- apply((matrixXreg==matrix(matrixXreg[1,],obsInsample,nVariables,byrow=TRUE)),2,all);
@@ -590,9 +610,12 @@ clm <- function(formula, data, subset, na.action,
             poly2 <- c(1,-1);
             if(iOrder>1){
                 for(j in 1:(iOrder-1)){
-                    poly2 <- polyprod(poly2,c(1,-1));
+                    poly2 <- polyprodcomplex(poly2,c(1,-1));
                 }
             }
+        }
+        else{
+            poly2 <- c(1);
         }
         if(maOrder>0){
             poly3 <- rep(1,maOrder+1);
@@ -630,15 +653,62 @@ clm <- function(formula, data, subset, na.action,
         matrixXreg <- cbind(matrixXreg, ariElements);
     }
 
+    iModelDesign <- function(...){
+        # Use only AR elements of the matrix, take differences for the initialisation purposes
+        # This matrix does not contain columns for iOrder and has fewer observations to match diff(y)
+        matrixXregForDiffs <- matrixXreg[,-(nVariables+1:iOrder),drop=FALSE];
+        if(arOrder>0){
+            matrixXregForDiffs[-c(1:iOrder),nVariablesExo+c(1:arOrder)] <- diff(matrixXregForDiffs[,nVariablesExo+c(1:arOrder)],
+                                                                                differences=iOrder);
+            matrixXregForDiffs <- matrixXregForDiffs[-c(1:iOrder),,drop=FALSE];
+            matrixXregForDiffs[c(1:iOrder),nVariablesExo+c(1:arOrder)] <- colMeans(matrixXregForDiffs[,nVariablesExo+c(1:arOrder), drop=FALSE]);
+        }
+        else{
+            matrixXregForDiffs <- matrixXregForDiffs[-c(1:iOrder),,drop=FALSE];
+        }
+
+        # Check variability in the new data. Have we removed important observations?
+        noVariability <- apply(matrixXregForDiffs[,-interceptIsNeeded,drop=FALSE]==
+                                   matrix(matrixXregForDiffs[1,-interceptIsNeeded],
+                                          nrow(matrixXregForDiffs),ncol(matrixXregForDiffs)-interceptIsNeeded,
+                                          byrow=TRUE),
+                               2,all);
+        if(any(noVariability)){
+            warning("Some variables had no variability after taking differences. ",
+                    "This might mean that all the variability for them happened ",
+                    "in the very beginning of the series. We'll try to fix this, but the model might fail.",
+                    call.=FALSE);
+            matrixXregForDiffs[1,which(noVariability)+1] <- rnorm(sum(noVariability));
+        }
+
+        return(matrixXregForDiffs)
+    }
 
     #### Estimate parameters of the model ####
     if(is.null(parameters)){
         if(loss=="CLS"){
-            B <- as.vector(invert(t(matrixXreg) %*% matrixXreg) %*% t(matrixXreg) %*% y);
+            # If this is d=0 model
+            if(iOrder==0){
+                B <- as.vector(invert(t(matrixXreg) %*% matrixXreg) %*% t(matrixXreg) %*% y);
+            }
+            else{
+                matrixXregForDiffs <- iModelDesign();
+                B <- as.vector(invert(t(matrixXregForDiffs) %*% matrixXregForDiffs) %*%
+                                   t(matrixXregForDiffs) %*% diff(y,differences=iOrder));
+            }
             CFValue <- CF(B, loss, y, matrixXreg);
         }
         else if(loss=="OLS"){
-            B <- as.vector(invert(t(Conj(matrixXreg)) %*% matrixXreg) %*% t(Conj(matrixXreg)) %*% y);
+            # If this is d=0 model
+            if(iOrder==0){
+                B <- as.vector(invert(t(Conj(matrixXreg)) %*% matrixXreg) %*% t(Conj(matrixXreg)) %*% y);
+                CFValue <- CF(B, loss, y, matrixXreg);
+            }
+            else{
+                matrixXregForDiffs <- iModelDesign();
+                B <- as.vector(invert(t(Conj(matrixXregForDiffs)) %*% matrixXregForDiffs) %*%
+                                   t(Conj(matrixXregForDiffs)) %*% diff(y,differences=iOrder));
+            }
             CFValue <- CF(B, loss, y, matrixXreg);
         }
         else{
@@ -698,25 +768,46 @@ clm <- function(formula, data, subset, na.action,
         CFValue <- CF(B, loss, y, matrixXreg);
     }
 
+
+    # If there were ARI, write down the polynomial
+    if(arimaModel){
+        ellipsis$orders <- orders;
+        # Some models save the first parameter for scale
+        nVariablesForReal <- length(B);
+        if(all(c(arOrder,iOrder)>0)){
+            poly1[-1] <- -B[nVariablesForReal-c(1:arOrder)+1];
+            ellipsis$polynomial <- -polyprodcomplex(poly2,poly1)[-1];
+            ellipsis$arima <- c(arOrder,iOrder,0);
+        }
+        else if(iOrder>0){
+            ellipsis$polynomial <- -poly2[-1];
+            ellipsis$arima <- c(0,iOrder,0);
+        }
+        else{
+            ellipsis$polynomial <- B[nVariablesForReal-c(1:arOrder)+1];
+            ellipsis$arima <- c(arOrder,0,0);
+        }
+        names(ellipsis$polynomial) <- ariNames;
+        ellipsis$arima <- paste0("ARIMA(",paste0(ellipsis$arima,collapse=","),")");
+    }
+
     fitterReturn <- fitter(B, y, matrixXreg);
     mu[] <- fitterReturn$mu;
     scale <- fitterReturn$scale;
 
     #### Produce Fisher Information ####
-    # if(FI){
-    #     # Only vcov is needed, no point in redoing the occurrenceModel
-    #     FI <- hessian(CF, B, h=stepSize,
-    #                   distribution=distribution, loss=loss, y=y, matrixXreg=matrixXreg,
-    #                   recursiveModel=recursiveModel, denominator=denominator);
-    #
-    #     if(any(is.nan(FI))){
-    #         warning("Something went wrong and we failed to produce the covariance matrix of the parameters.\n",
-    #                 "Obviously, it's not our fault. Probably Russians have hacked your computer...\n",
-    #                 "Try a different distribution maybe?", call.=FALSE);
-    #         FI <- diag(1e+100,nVariables);
-    #     }
-    #     dimnames(FI) <- list(variablesNames,variablesNames);
-    # }
+    if(FI){
+        # Only vcov is needed, no point in redoing the occurrenceModel
+        FI <- hessian(CF, B, h=stepSize, loss=loss, y=y, matrixXreg=matrixXreg);
+
+        if(any(is.nan(FI))){
+            warning("Something went wrong and we failed to produce the covariance matrix of the parameters.\n",
+                    "Obviously, it's not our fault. Probably Russians have hacked your computer...\n",
+                    "Try a different distribution maybe?", call.=FALSE);
+            FI <- diag(1e+100,nVariables);
+        }
+        dimnames(FI) <- list(variablesNames,variablesNames);
+    }
 
     # Give names to additional parameters
     if(is.null(parameters)){
@@ -864,67 +955,132 @@ vcov.clm <- function(object, type=NULL, ...){
         matrixXreg <- matrixXreg[,-1,drop=FALSE];
     }
 
-    sigmaValue <- sigma(object, type);
-
-    if(type=="conjugate"){
-        # Get variance
-        sigmaValue[] <- sigmaValue^2;
-        if(object$loss=="CLS"){
-            # Conjugate matrix
-            matrixXregConj <- Conj(matrixXreg);
-            # Transposed original
-            matrixXregTrans <- t(matrixXreg);
-            # Conjugate transposed matrix
-            matrixXregConjTrans <- t(Conj(matrixXreg));
-
-            # Calculate the (X'X)^{-1} X'X~ (X~' X~)^{-1'}
-            vcov <-
-                invert(matrixXregTrans %*% matrixXreg) %*%
-                (matrixXregTrans %*% matrixXregConj) %*%
-                t(invert(t(matrixXregConj) %*% matrixXregConj));
-        }
-        # OLS and likelihood
-        else {
-            # Conjugate matrix
-            matrixXregConj <- Conj(matrixXreg);
-            # Transposed conjugate original
-            matrixXregConjTrans <- t(Conj(matrixXreg));
-            # Transposed matrix
-            matrixXregTrans <- t(matrixXreg);
-
-            # Calculate the (X'X)^{-1} X'X~ (X~' X~)^{-1'}
-            vcov <-
-                invert(matrixXregConjTrans %*% matrixXreg) %*%
-                (matrixXregConjTrans %*% matrixXreg) %*%
-                t(Conj(invert(matrixXregTrans %*% matrixXregConj)));
-        }
-    }
-    else if(type=="direct"){
-        # Get variance
-        sigmaValue[] <- sigmaValue^2;
-        if(object$loss=="CLS"){
-            # Simple transposition of the matrix
-            matrixXregTrans <- t(matrixXreg);
-            matrixXreg <- matrixXreg;
-        }
-        # OLS and likelihood
-        else {
-            # Simple transposition of the matrix
-            matrixXregTrans <- t(Conj(matrixXreg));
-        }
-
-        # Calculate the (X' X)^{-1}
-        vcov <- invert(matrixXregTrans %*% matrixXreg);
+    # If there are ARIMA orders, define them.
+    if(!is.null(object$other$arima)){
+        arOrders <- object$other$orders[1];
+        iOrders <- object$other$orders[2];
+        maOrders <- object$other$orders[3];
     }
     else{
-        # Transform the complex matrix to be a matrix
-        matrixXreg <- complex2mat(matrixXreg);
-        # Conjugate transposition
-        matrixXregTrans <- t(matrixXreg);
+        arOrders <- iOrders <- maOrders <- 0;
+    }
 
-        # Calculate the (X'X)^{-1}
-        # Re() is needed to drop the 0i
-        vcov <- Re(invert(matrixXregTrans %*% matrixXreg));
+    sigmaValue <- sigma(object, type);
+
+    if(iOrders==0 && maOrders==0){
+        if(type=="conjugate"){
+            # Get variance
+            sigmaValue[] <- sigmaValue^2;
+            if(object$loss=="CLS"){
+                # Conjugate matrix
+                matrixXregConj <- Conj(matrixXreg);
+                # Transposed original
+                matrixXregTrans <- t(matrixXreg);
+                # Conjugate transposed matrix
+                matrixXregConjTrans <- t(Conj(matrixXreg));
+
+                # Calculate the (X'X)^{-1} X'X~ (X~' X~)^{-1'}
+                vcov <-
+                    invert(matrixXregTrans %*% matrixXreg) %*%
+                    (matrixXregTrans %*% matrixXregConj) %*%
+                    t(invert(t(matrixXregConj) %*% matrixXregConj));
+            }
+            # OLS and likelihood
+            else {
+                # Conjugate matrix
+                matrixXregConj <- Conj(matrixXreg);
+                # Transposed conjugate original
+                matrixXregConjTrans <- t(Conj(matrixXreg));
+                # Transposed matrix
+                matrixXregTrans <- t(matrixXreg);
+
+                # Calculate the (X'X)^{-1} X'X~ (X~' X~)^{-1'}
+                vcov <-
+                    invert(matrixXregConjTrans %*% matrixXreg) %*%
+                    (matrixXregConjTrans %*% matrixXreg) %*%
+                    t(Conj(invert(matrixXregTrans %*% matrixXregConj)));
+            }
+        }
+        else if(type=="direct"){
+            # Get variance
+            sigmaValue[] <- sigmaValue^2;
+            if(object$loss=="CLS"){
+                # Simple transposition of the matrix
+                matrixXregTrans <- t(matrixXreg);
+                matrixXreg <- matrixXreg;
+            }
+            # OLS and likelihood
+            else {
+                # Simple transposition of the matrix
+                matrixXregTrans <- t(Conj(matrixXreg));
+            }
+
+            # Calculate the (X' X)^{-1}
+            vcov <- invert(matrixXregTrans %*% matrixXreg);
+        }
+        else{
+            # Transform the complex matrix to be a matrix
+            matrixXreg <- complex2mat(matrixXreg);
+            # Conjugate transposition
+            matrixXregTrans <- t(matrixXreg);
+
+            # Calculate the (X'X)^{-1}
+            # Re() is needed to drop the 0i
+            vcov <- Re(invert(matrixXregTrans %*% matrixXreg));
+        }
+    }
+    else{
+        type <- "matrix";
+
+        # Form the call for alm
+        newCall <- object$call;
+        if(interceptIsNeeded){
+            newCall$formula <- as.formula(paste0("`",all.vars(newCall$formula)[1],"`~."));
+        }
+        else{
+            newCall$formula <- as.formula(paste0("`",all.vars(newCall$formula)[1],"`~.-1"));
+        }
+        newCall$data <- object$data[,!(colnames(object$data) %in% names(object$other$polynomial))];
+        newCall$subset <- object$subset;
+        # This needs to be likelihood, otherwise it won't work with complex variables
+        newCall$loss <- "likelihood";
+        newCall$orders <- object$other$orders;
+        newCall$parameters <- c(Re(coef(object)),Im(coef(object)));
+        newCall$scale <- object$scale;
+        newCall$fast <- TRUE;
+        newCall$FI <- TRUE;
+        # Include bloody ellipsis
+        newCall <- as.call(c(as.list(newCall),substitute(ellipsis)));
+        # Make sure that print_level is zero, not to print redundant things out
+        newCall$print_level <- 0;
+
+        # Recall alm to get hessian
+        FIMatrix <- eval(newCall)$FI;
+        # If any row contains all zeroes, then it means that the variable does not impact the likelihood
+        brokenVariables <- apply(FIMatrix==0,1,all) | apply(is.nan(FIMatrix),1,any);
+        # If there are issues, try the same stuff, but with a different step size for hessian
+        if(any(brokenVariables)){
+            newCall$stepSize <- .Machine$double.eps^(1/6);
+            FIMatrix <- eval(newCall)$FI;
+        }
+
+        # See if Choleski works... It sometimes fails, when we don't get to the max of likelihood.
+        # vcovMatrixTry <- try(chol2inv(chol(FIMatrix)), silent=TRUE);
+        # if(inherits(vcovMatrixTry,"try-error")){
+        #     warning(paste0("Choleski decomposition of hessian failed, so we had to revert to the simple inversion.\n",
+        #                    "The estimate of the covariance matrix of parameters might be inaccurate.\n"),
+        #             call.=FALSE, immediate.=TRUE);
+            vcovMatrixTry <- try(solve(FIMatrix, diag(nVariables*2), tol=1e-20), silent=TRUE);
+            if(inherits(vcovMatrixTry,"try-error")){
+                vcov <- diag(1e+100,nVariables);
+            }
+            else{
+                vcov <- FIMatrix;
+            }
+        # }
+        # else{
+        #     vcov <- vcovMatrixTry;
+        # }
     }
     ndimVcov <- ncol(vcov);
 
@@ -957,7 +1113,9 @@ confint.clm <- function(object, parm, level = 0.95, ...){
     parametersNames <- names(parameters);
     parametersLength <- length(parametersNames);
 
-    if(object$loss=="likelihood"){
+    # If this is the likelihood or we did the numeric vcov
+    if(object$loss=="likelihood" ||
+       (!is.null(object$other$arima) && (object$other$orders[2]!=0 || object$other$orders[3]!=0))){
         # Get covariance matrix
         parametersSE <- sqrt(diag(vcov(object, type="matrix")));
     }

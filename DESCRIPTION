@@ -19,7 +19,8 @@ Imports:
     stats,
     graphics,
     nloptr,
-    mvtnorm
+    mvtnorm,
+    pracma
 LinkingTo: Rcpp, RcppArmadillo
 Suggests:
     testthat,

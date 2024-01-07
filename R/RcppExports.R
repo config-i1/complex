@@ -24,3 +24,7 @@ invert <- function(x) {
     .Call('_complex_invert', PACKAGE = 'complex', x)
 }
 
+polyprodcomplex <- function(poly1, poly2) {
+    .Call('_complex_polyprodcomplex', PACKAGE = 'complex', poly1, poly2)
+}
+

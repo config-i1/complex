@@ -22,9 +22,22 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// polyprodcomplex
+ComplexVector polyprodcomplex(ComplexVector const& poly1, ComplexVector const& poly2);
+RcppExport SEXP _complex_polyprodcomplex(SEXP poly1SEXP, SEXP poly2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< ComplexVector const& >::type poly1(poly1SEXP);
+    Rcpp::traits::input_parameter< ComplexVector const& >::type poly2(poly2SEXP);
+    rcpp_result_gen = Rcpp::wrap(polyprodcomplex(poly1, poly2));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_complex_invert", (DL_FUNC) &_complex_invert, 1},
+    {"_complex_polyprodcomplex", (DL_FUNC) &_complex_polyprodcomplex, 2},
     {NULL, NULL, 0}
 };
 
