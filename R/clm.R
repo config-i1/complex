@@ -172,7 +172,7 @@ clm <- function(formula, data, subset, na.action,
     # Basic fitter for non-dynamic models
     fitter <- function(B, y, matrixXreg){
 
-        if(loss!="OLS" && loss!="CLS"){
+        if(loss!="OLS" && loss!="CLS" && !is.complex(B)){
             B <- complex(real=B[1:(nVariables/2)],imaginary=B[(nVariables/2+1):nVariables]);
         }
 
