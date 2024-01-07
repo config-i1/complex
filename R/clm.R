@@ -1258,6 +1258,27 @@ predict.clm <- function(object, newdata=NULL, interval=c("none", "confidence", "
     parameters <- coef(object);
     parametersNames <- names(parameters);
 
+    arimaModel <- !is.null(object$other$arima);
+    if(arimaModel){
+        y <- actuals(object);
+        ariOrder <- length(object$other$polynomial);
+        arOrder <- object$other$orders[1];
+        iOrder <- object$other$orders[2];
+        maOrder <- object$other$orders[3];
+        ariParameters <- object$other$polynomial;
+        ariNames <- names(ariParameters);
+
+        # Split the parameters into normal and polynomial (for ARI)
+        if(arOrder>0){
+            parameters <- parameters[-c(length(parameters)+(1-arOrder):0)];
+        }
+        nonariParametersNumber <- length(parameters);
+        parametersNames <- names(parameters);
+
+        # Add ARI polynomials to the parameters
+        parameters <- c(parameters,ariParameters);
+    }
+
     nLevels <- length(level);
     levelLow <- levelUp <- vector("numeric",nLevels);
     if(side=="upper"){
@@ -1337,31 +1358,52 @@ predict.clm <- function(object, newdata=NULL, interval=c("none", "confidence", "
         matrixOfxreg <- model.matrix(newdataExpanded,data=newdataExpanded);
     # And this small function will do all necessary transformations of complex variables
         matrixOfxregComplex <- cmodel.matrix(originalData, data=originalData);
-        matrixOfxreg[,complexVariablesNames] <- as.matrix(matrixOfxregComplex[,complexVariablesNames]);
+        complexVariablesNamesUsed <- complexVariablesNames[complexVariablesNames %in% colnames(matrixOfxreg)];
+        matrixOfxreg[,complexVariablesNamesUsed] <- as.matrix(matrixOfxregComplex[,complexVariablesNamesUsed]);
         matrixOfxreg <- matrixOfxreg[,parametersNames,drop=FALSE];
     }
 
-    h <- nrow(matrixOfxreg);
-
     if(!is.matrix(matrixOfxreg)){
         matrixOfxreg <- as.matrix(matrixOfxreg);
-        h <- nrow(matrixOfxreg);
     }
+
+    h <- nrow(matrixOfxreg);
 
     if(h==1){
         matrixOfxreg <- matrix(matrixOfxreg, nrow=1);
     }
 
-    ourForecast <- as.vector(matrixOfxreg %*% parameters);
+    if(arimaModel){
+        # Fill in the tails with the available data
+        matrixOfxregFull <- cbind(matrixOfxreg, matrix(NA,h,ariOrder,dimnames=list(NULL,ariNames)));
+        for(i in 1:ariOrder){
+            matrixOfxregFull[1:min(h,i),nonariParametersNumber+i] <- tail(y,i)[1:min(h,i)];
+        }
+
+        # Produce forecasts iteratively
+        ourForecast <- vector("numeric", h);
+        for(i in 1:h){
+            ourForecast[i] <- matrixOfxregFull[i,] %*% parameters;
+            for(j in 1:ariOrder){
+                if(i+j-1==h){
+                    break;
+                }
+                matrixOfxregFull[i+j,nonariParametersNumber+j] <- ourForecast[i];
+            }
+        }
+        # Redefine the matrix for the vcov
+        matrixOfxreg <- matrixOfxregFull[,1:(nonariParametersNumber+arOrder),drop=FALSE];
+    }
+    else{
+        ourForecast <- as.vector(matrixOfxreg %*% parameters);
+    }
     vectorOfVariances <- NULL;
 
     if(interval!="none"){
         matrixOfxreg <- complex2mat(matrixOfxreg);
-        ourVcov <- vcov(object, ...);
+        ourVcov <- vcov(object, type="matrix");
         # abs is needed for some cases, when the likelihood was not fully optimised
-        vectorOfVariances <- complex2vec(diag(mat2complex(matrixOfxreg %*% ourVcov %*% t(matrixOfxreg))));
-
-        #### Confidence works somehow. Prediction doesn't.
+        vectorOfVariances <- matrix(diag(matrixOfxreg %*% ourVcov %*% t(matrixOfxreg)),h,2,byrow=TRUE);
 
         yUpper <- yLower <- matrix(NA, h, nLevels);
         if(interval=="confidence"){
@@ -1371,7 +1413,7 @@ predict.clm <- function(object, newdata=NULL, interval=c("none", "confidence", "
             }
         }
         else if(interval=="prediction"){
-            sigmaValues <- sigma(object);
+            sigmaValues <- sigma(object, type="matrix");
             vectorOfVariances[] <- vectorOfVariances + matrix(diag(sigmaValues),h,2,byrow=TRUE);
             for(i in 1:nLevels){
                 yLower[,i] <- ourForecast + paramQuantiles[i] * vec2complex(sqrt(vectorOfVariances));
