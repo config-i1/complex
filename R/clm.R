@@ -1251,7 +1251,7 @@ plot.clm <- function(x, which=c(1,2,4,6), ...){
 
 #' @export
 predict.clm <- function(object, newdata=NULL, interval=c("none", "confidence", "prediction"),
-                            level=0.95, side=c("both","upper","lower"), ...){
+                        level=0.95, side=c("both","upper","lower"), ...){
     interval <- match.arg(interval);
     side <- match.arg(side);
 
@@ -1309,58 +1309,64 @@ predict.clm <- function(object, newdata=NULL, interval=c("none", "confidence", "
     else{
         newdataProvided <- TRUE;
 
-        if(!is.data.frame(newdata)){
-            if(is.vector(newdata)){
-                newdataNames <- names(newdata);
-                newdata <- matrix(newdata, nrow=1, dimnames=list(NULL, newdataNames));
+        # If the formula contains more than just intercept
+        if(length(all.vars(formula(object)))>1){
+            if(!is.data.frame(newdata)){
+                if(is.vector(newdata)){
+                    newdataNames <- names(newdata);
+                    newdata <- matrix(newdata, nrow=1, dimnames=list(NULL, newdataNames));
+                }
+                newdata <- as.data.frame(newdata);
             }
-            newdata <- as.data.frame(newdata);
+            else{
+                dataOrders <- unlist(lapply(newdata,is.ordered));
+                # If there is an ordered factor, remove the bloody ordering!
+                if(any(dataOrders)){
+                    newdata[dataOrders] <- lapply(newdata[dataOrders],function(x) factor(x, levels=levels(x), ordered=FALSE));
+                }
+            }
+
+            # The gsub is needed in order to remove accidental special characters
+            colnames(newdata) <- make.names(colnames(newdata), unique=TRUE);
+
+            # Extract the formula and get rid of the response variable
+            testFormula <- formula(object);
+
+            # If the user asked for trend, but it's not in the data, add it
+            if(any(all.vars(testFormula)=="trend") && all(colnames(newdata)!="trend")){
+                newdata <- cbind(newdata,trend=nobs(object)+c(1:nrow(newdata)));
+            }
+
+            testFormula[[2]] <- NULL;
+            # Expand the data frame
+            newdataExpanded <- model.frame(testFormula, newdata);
+            interceptIsNeeded <- attr(terms(newdataExpanded),"intercept")!=0;
+
+            #### Temporary solution for model.matrix() ####
+            responseName <- all.vars(formula(object))[[1]];
+            if(is.data.frame(newdataExpanded)){
+                complexVariables <- sapply(newdataExpanded, is.complex);
+            }
+            else{
+                complexVariables <- apply(newdataExpanded, 2, is.complex);
+            }
+            complexVariablesNames <- names(complexVariables)[complexVariables];
+            complexVariablesNames <- complexVariablesNames[complexVariablesNames!=responseName];
+            # Save the original data to come back to it
+            originalData <- newdataExpanded;
+            newdataExpanded[,complexVariables] <- sapply(newdataExpanded[,complexVariables], Re);
+
+            # Create a model from the provided stuff. This way we can work with factors
+            matrixOfxreg <- model.matrix(newdataExpanded,data=newdataExpanded);
+            # And this small function will do all necessary transformations of complex variables
+            matrixOfxregComplex <- cmodel.matrix(originalData, data=originalData);
+            complexVariablesNamesUsed <- complexVariablesNames[complexVariablesNames %in% colnames(matrixOfxreg)];
+            matrixOfxreg[,complexVariablesNamesUsed] <- as.matrix(matrixOfxregComplex[,complexVariablesNamesUsed]);
+            matrixOfxreg <- matrixOfxreg[,parametersNames,drop=FALSE];
         }
         else{
-            dataOrders <- unlist(lapply(newdata,is.ordered));
-            # If there is an ordered factor, remove the bloody ordering!
-            if(any(dataOrders)){
-                newdata[dataOrders] <- lapply(newdata[dataOrders],function(x) factor(x, levels=levels(x), ordered=FALSE));
-            }
+            matrixOfxreg <- rep(1, nrow(newdata));
         }
-
-        # The gsub is needed in order to remove accidental special characters
-        colnames(newdata) <- make.names(colnames(newdata), unique=TRUE);
-
-        # Extract the formula and get rid of the response variable
-        testFormula <- formula(object);
-
-        # If the user asked for trend, but it's not in the data, add it
-        if(any(all.vars(testFormula)=="trend") && all(colnames(newdata)!="trend")){
-            newdata <- cbind(newdata,trend=nobs(object)+c(1:nrow(newdata)));
-        }
-
-        testFormula[[2]] <- NULL;
-        # Expand the data frame
-        newdataExpanded <- model.frame(testFormula, newdata);
-        interceptIsNeeded <- attr(terms(newdataExpanded),"intercept")!=0;
-
-        #### Temporary solution for model.matrix() ####
-        responseName <- all.vars(formula(object))[[1]];
-        if(is.data.frame(newdataExpanded)){
-            complexVariables <- sapply(newdataExpanded, is.complex);
-        }
-        else{
-            complexVariables <- apply(newdataExpanded, 2, is.complex);
-        }
-        complexVariablesNames <- names(complexVariables)[complexVariables];
-        complexVariablesNames <- complexVariablesNames[complexVariablesNames!=responseName];
-        # Save the original data to come back to it
-        originalData <- newdataExpanded;
-        newdataExpanded[,complexVariables] <- sapply(newdataExpanded[,complexVariables], Re);
-
-        # Create a model from the provided stuff. This way we can work with factors
-        matrixOfxreg <- model.matrix(newdataExpanded,data=newdataExpanded);
-    # And this small function will do all necessary transformations of complex variables
-        matrixOfxregComplex <- cmodel.matrix(originalData, data=originalData);
-        complexVariablesNamesUsed <- complexVariablesNames[complexVariablesNames %in% colnames(matrixOfxreg)];
-        matrixOfxreg[,complexVariablesNamesUsed] <- as.matrix(matrixOfxregComplex[,complexVariablesNamesUsed]);
-        matrixOfxreg <- matrixOfxreg[,parametersNames,drop=FALSE];
     }
 
     if(!is.matrix(matrixOfxreg)){
