@@ -884,7 +884,6 @@ clm <- function(formula, data, subset, na.action,
 
     #### Produce Fisher Information ####
     if(FI){
-        # Only vcov is needed, no point in redoing the occurrenceModel
         FI <- hessian(CF, B, h=stepSize, loss=loss, y=y, matrixXreg=matrixXreg);
 
         if(any(is.nan(FI))){
