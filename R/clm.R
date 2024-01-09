@@ -169,32 +169,63 @@ clm <- function(formula, data, subset, na.action,
         return(sum(x) / length(x));
     }
 
+    fitterRecursive <- function(y, B, matrixXreg){
+
+        maIndex <- maOrder;
+        # Initialise MA part of the model
+        # matrixXreg[c(1:maIndex),nVariablesExo+arOrder+iOrder+1:maIndex] <- 0;
+        for(i in 1:obsInsample){
+            maIndex[] <- min(maOrder, obsInsample-i);
+            # Produce one-step-ahead fitted
+            mu[i] <- matrixXreg[i,] %*% B;
+            if(maIndex>0){
+                # Add the residuals to the matrix
+                matrixXreg[cbind(i+c(1:maIndex),nVariablesExo+arOrder+iOrder+1:maIndex)] <- rep(y[i]-mu[i], maIndex);
+            }
+        }
+
+        return(list(mu=mu,matrixXreg=matrixXreg));
+    }
+
     # Basic fitter for non-dynamic models
     fitter <- function(B, y, matrixXreg){
 
-        if(loss!="OLS" && loss!="CLS" && !is.complex(B)){
+        # If the vector B is not complex then it is estimated in nloptr. Make it complex
+        if(!is.complex(B)){
+            nVariables <- length(B);
             B <- complex(real=B[1:(nVariables/2)],imaginary=B[(nVariables/2+1):nVariables]);
         }
 
         # If there is ARIMA, then calculate polynomials
         if(arimaModel){
-            poly1[-1] <- -tail(B,arOrder);
-            # This condition is needed for cases of only ARI models
-            if(nVariables>arOrder){
-                B <- c(B[1:(length(B)-arOrder)], -polyprodcomplex(poly2,poly1)[-1]);
+            if(maOrder>0){
+                BMA <- tail(B, maOrder);
             }
             else{
-                B <- -polyprodcomplex(poly2,poly1)[-1];
+                BMA <- NULL;
+            }
+
+            if(arOrder>0){
+                poly1[-1] <- -B[nVariablesExo+1:arOrder];
+            }
+
+            # This condition is needed for cases of pure ARI models
+            if(nVariablesExo>0){
+                B <- c(B[1:nVariablesExo], -polyprodcomplex(poly2,poly1)[-1], BMA);
+            }
+            else{
+                B <- -c(polyprodcomplex(poly2,poly1)[-1], BMA);
             }
         }
-        else if(iOrder>0){
-            B <- c(B, -poly2[-1]);
-        }
-        else if(arOrder>0){
-            poly1[-1] <- -tail(B,arOrder);
-        }
 
-        mu[] <- matrixXreg %*% B
+        if(maOrder>0){
+            recursiveFit <- fitterRecursive(y, B, matrixXreg);
+            mu[] <- recursiveFit$mu;
+            matrixXreg[] <- recursiveFit$matrixXreg;
+        }
+        else{
+            mu[] <- matrixXreg %*% B
+        }
 
         # Get the scale value
         if(loss=="CLS"){
@@ -208,7 +239,7 @@ clm <- function(formula, data, subset, na.action,
             scale <- t(errors) %*% errors / obsInsample;
         }
 
-        return(list(mu=mu,scale=scale));
+        return(list(mu=mu, scale=scale, matrixXreg=matrixXreg));
     }
 
     ### Fitted values in the scale of the original variable
@@ -267,6 +298,42 @@ clm <- function(formula, data, subset, na.action,
         }
 
         return(CFValue);
+    }
+
+    estimator <- function(B, print_level){
+        print_level_hidden <- print_level;
+        if(print_level==41){
+            print_level[] <- 0;
+        }
+
+        #### Define what to do with the maxeval ####
+        if(is.null(ellipsis$maxeval)){
+            maxeval <- nVariables * 40;
+        }
+        else{
+            maxeval <- ellipsis$maxeval;
+        }
+
+        # Retransform the vector of parameters into a real-valued one
+        BReal <- c(Re(B),Im(B));
+        nVariables <- length(BReal);
+
+        # Although this is not needed in case of distribution="dnorm", we do that in a way, for the code consistency purposes
+        res <- nloptr(BReal, CF,
+                      opts=list(algorithm=algorithm, xtol_rel=xtol_rel, maxeval=maxeval, print_level=print_level,
+                                maxtime=maxtime, xtol_abs=xtol_abs, ftol_rel=ftol_rel, ftol_abs=ftol_abs),
+                      # lb=BLower, ub=BUpper,
+                      loss=loss, y=y, matrixXreg=matrixXreg);
+        BReal[] <- res$solution;
+        B[] <- complex(real=BReal[1:(nVariables/2)],imaginary=BReal[(nVariables/2+1):nVariables]);
+        nVariables <- length(B);
+        CFValue <- res$objective;
+
+        if(print_level_hidden>0){
+            print(res);
+        }
+
+        return(list(B=B, CFValue=CFValue));
     }
 
     #### Define the rest of parameters ####
@@ -463,7 +530,6 @@ clm <- function(formula, data, subset, na.action,
         warning("You have asked not to include intercept in the model. We will try to fit the model, ",
                 "but this is a very naughty thing to do, and we cannot guarantee that it will work...", call.=FALSE);
     }
-    # colnames(dataWork) <- c(responseName, variablesNames);
     rm(dataWork, originalData);
 
     nVariables <- length(variablesNames);
@@ -576,23 +642,27 @@ clm <- function(formula, data, subset, na.action,
         nVariables <- length(variablesNames);
     }
     variablesNamesAll <- variablesNames;
+    parametersNames <- variablesNames;
     # The number of exogenous variables
     nVariablesExo <- nVariables;
 
     #### ARIMA orders ####
     arOrder <- orders[1];
     iOrder <- orders[2];
-    #### !!! This is not implemented yet
     maOrder <- orders[3];
-    #### !!!
+
     # Check AR, I and form ARI order
     if(arOrder<0){
-        warning("ar must be positive. Taking the absolute value.", call.=FALSE);
+        warning("p in AR(p) must be positive. Taking the absolute value.", call.=FALSE);
         arOrder <- abs(arOrder);
     }
-    if(length(iOrder)>1){
-        warning("i must be positive. Taking the absolute value.", call.=FALSE);
+    if(iOrder<0){
+        warning("d in I(d) must be positive. Taking the absolute value.", call.=FALSE);
         iOrder <- abs(iOrder);
+    }
+    if(maOrder<0){
+        warning("q in MA(q) must be positive. Taking the absolute value.", call.=FALSE);
+        maOrder <- abs(maOrder);
     }
     ariOrder <- arOrder + iOrder;
     arimaModel <- ifelseFast(ariOrder>0, TRUE, FALSE) || ifelseFast(maOrder>0, TRUE, FALSE);
@@ -604,7 +674,7 @@ clm <- function(formula, data, subset, na.action,
             poly1 <- rep(1,arOrder+1);
         }
         else{
-            poly1 <- c(1,1);
+            poly1 <- c(1);
         }
         if(iOrder>0){
             poly2 <- c(1,-1);
@@ -621,51 +691,69 @@ clm <- function(formula, data, subset, na.action,
             poly3 <- rep(1,maOrder+1);
         }
         else{
-            poly3 <- c(1,1);
+            poly3 <- c(1);
         }
 
-        # Expand the response variable to have ARI
-        ariElements <- xregExpander(complex2vec(y), lags=-c(1:ariOrder), gaps="auto")[,-c(1,ariOrder+2),drop=FALSE];
-        ariElements <- vec2complex(ariElements[,rep(1:ariOrder,each=2)+rep(c(0,ariOrder),ariOrder)]);
+        if(ariOrder>0){
+            # Expand the response variable to have ARI
+            ariElements <- xregExpander(complex2vec(y), lags=-c(1:ariOrder), gaps="auto")[,-c(1,ariOrder+2),drop=FALSE];
+            ariElements <- vec2complex(ariElements[,rep(1:ariOrder,each=2)+rep(c(0,ariOrder),ariOrder)]);
 
-        # Fix names of lags
-        # class(ariElements) <- "matrix";
-        ariNames <- paste0(responseName,"Lag",c(1:ariOrder));
-        colnames(ariElements) <- ariNames;
-        variablesNamesAll <- c(variablesNames,ariNames);
+            # Fill in zeroes with the mean values
+            ariElements[ariElements==0] <- mean(ariElements[ariElements[,1]!=0,1]);
+
+            # Fix names of lags
+            # class(ariElements) <- "matrix";
+            ariNames <- paste0(responseName,"Lag",c(1:ariOrder));
+            colnames(ariElements) <- ariNames;
+            variablesNames <- c(variablesNames,ariNames);
+        }
+        else{
+            ariElements <- NULL;
+            ariNames <- NULL;
+        }
 
         # Adjust number of variables
-        nVariables <- nVariables + arOrder;
+        nVariables <- nVariables + arOrder * (arOrder>0) + maOrder * (maOrder>0);
 
         # Give names to AR elements
         if(arOrder>0){
             arNames <- paste0(responseName,"Lag",c(1:arOrder));
-            variablesNames <- c(variablesNames,arNames);
+            parametersNames <- c(parametersNames,arNames);
+        }
+
+        # Amend the matrix for MA to have columns for the previous errors
+        if(maOrder>0){
+            maElements <- matrix(0,obsInsample,maOrder);
+            maNames <- paste0("eLag",c(1:maOrder));
+            variablesNames <- c(variablesNames,maNames);
+            parametersNames <- c(parametersNames,maNames);
         }
         else{
-            arNames <- vector("character",0);
+            maElements <- NULL;
+            maNames <- vector("character",0);
         }
+        variablesNamesAll <- variablesNames;
 
-        # Fill in zeroes with the mean values
-        ariElements[ariElements==0] <- mean(ariElements[ariElements[,1]!=0,1]);
+        # Add ARIMA elements to the design matrix
+        matrixXreg <- cbind(matrixXreg, ariElements, maElements);
 
-        # Add ARI elements to the design matrix
-        matrixXreg <- cbind(matrixXreg, ariElements);
     }
 
     iModelDesign <- function(...){
         # Use only AR elements of the matrix, take differences for the initialisation purposes
         # This matrix does not contain columns for iOrder and has fewer observations to match diff(y)
-        matrixXregForDiffs <- matrixXreg[,-(nVariables+1:iOrder),drop=FALSE];
+        matrixXregForDiffs <- matrixXreg[,-(nVariablesExo+arOrder+1:(iOrder+maOrder)),drop=FALSE];
         if(arOrder>0){
             matrixXregForDiffs[-c(1:iOrder),nVariablesExo+c(1:arOrder)] <- diff(matrixXregForDiffs[,nVariablesExo+c(1:arOrder)],
                                                                                 differences=iOrder);
-            matrixXregForDiffs <- matrixXregForDiffs[-c(1:iOrder),,drop=FALSE];
-            matrixXregForDiffs[c(1:iOrder),nVariablesExo+c(1:arOrder)] <- colMeans(matrixXregForDiffs[,nVariablesExo+c(1:arOrder), drop=FALSE]);
+            # matrixXregForDiffs[c(1:iOrder),nVariablesExo+c(1:arOrder)] <- colMeans(matrixXregForDiffs[,nVariablesExo+c(1:arOrder), drop=FALSE]);
         }
-        else{
-            matrixXregForDiffs <- matrixXregForDiffs[-c(1:iOrder),,drop=FALSE];
-        }
+        # else{
+        #     matrixXregForDiffs <- matrixXregForDiffs[-c(1:iOrder),,drop=FALSE];
+        # }
+        # Drop first d observations
+        matrixXregForDiffs <- matrixXregForDiffs[-c(1:iOrder),,drop=FALSE];
 
         # Check variability in the new data. Have we removed important observations?
         noVariability <- apply(matrixXregForDiffs[,-interceptIsNeeded,drop=FALSE]==
@@ -689,68 +777,76 @@ clm <- function(formula, data, subset, na.action,
         if(loss=="CLS"){
             # If this is d=0 model
             if(iOrder==0){
-                B <- as.vector(invert(t(matrixXreg) %*% matrixXreg) %*% t(matrixXreg) %*% y);
+                B <- as.vector(invert(t(matrixXreg[,1:(nVariablesExo+arOrder), drop=FALSE]) %*%
+                                          matrixXreg[,1:(nVariablesExo+arOrder), drop=FALSE]) %*%
+                                   t(matrixXreg[,1:(nVariablesExo+arOrder), drop=FALSE]) %*% y);
             }
             else{
                 matrixXregForDiffs <- iModelDesign();
                 B <- as.vector(invert(t(matrixXregForDiffs) %*% matrixXregForDiffs) %*%
                                    t(matrixXregForDiffs) %*% diff(y,differences=iOrder));
             }
-            CFValue <- CF(B, loss, y, matrixXreg);
+            if(maOrder>0){
+                # Add initial values for the maOrder
+                B <- c(B, rep(0.1*(1+1i),maOrder));
+                # Estimate the model
+                res <- estimator(B, print_level);
+                B <- res$B;
+                CFValue <- res$CFValue;
+            }
+            else{
+                CFValue <- CF(B, loss, y, matrixXreg);
+            }
         }
         else if(loss=="OLS"){
             # If this is d=0 model
             if(iOrder==0){
-                B <- as.vector(invert(t(Conj(matrixXreg)) %*% matrixXreg) %*% t(Conj(matrixXreg)) %*% y);
-                CFValue <- CF(B, loss, y, matrixXreg);
+                B <- as.vector(invert(t(Conj(matrixXreg[,1:(nVariablesExo+arOrder), drop=FALSE])) %*%
+                                          matrixXreg[,1:(nVariablesExo+arOrder), drop=FALSE]) %*%
+                                   t(Conj(matrixXreg[,1:(nVariablesExo+arOrder), drop=FALSE])) %*% y);
             }
             else{
                 matrixXregForDiffs <- iModelDesign();
                 B <- as.vector(invert(t(Conj(matrixXregForDiffs)) %*% matrixXregForDiffs) %*%
                                    t(Conj(matrixXregForDiffs)) %*% diff(y,differences=iOrder));
             }
-            CFValue <- CF(B, loss, y, matrixXreg);
-        }
-        else{
-            # Set bounds for B as NULL. Then amend if needed
-            BLower <- NULL;
-            BUpper <- NULL;
-            if(is.null(B)){
-                B <- as.vector(invert(t(Conj(matrixXreg)) %*% matrixXreg) %*% t(Conj(matrixXreg)) %*% y);
-                B <- c(Re(B),Im(B));
-            }
-            nVariables <- length(B);
-
-            BLower <- rep(-Inf,nVariables);
-            BUpper <- rep(Inf,nVariables);
-
-            print_level_hidden <- print_level;
-            if(print_level==41){
-                print_level[] <- 0;
-            }
-
-            #### Define what to do with the maxeval ####
-            if(is.null(ellipsis$maxeval)){
-                maxeval <- nVariables * 40;
+            if(maOrder>0){
+                # Add initial values for the maOrder
+                B <- c(B, rep(0.1*(1+1i),maOrder));
+                # Estimate the model
+                res <- estimator(B, print_level);
+                B <- res$B;
+                CFValue <- res$CFValue;
             }
             else{
-                maxeval <- ellipsis$maxeval;
+                CFValue <- CF(B, loss, y, matrixXreg);
             }
-
-            # Although this is not needed in case of distribution="dnorm", we do that in a way, for the code consistency purposes
-            res <- nloptr(B, CF,
-                          opts=list(algorithm=algorithm, xtol_rel=xtol_rel, maxeval=maxeval, print_level=print_level,
-                                    maxtime=maxtime, xtol_abs=xtol_abs, ftol_rel=ftol_rel, ftol_abs=ftol_abs),
-                          # lb=BLower, ub=BUpper,
-                          loss=loss, y=y, matrixXreg=matrixXreg);
-            B[] <- res$solution;
-            B <- complex(real=B[1:(nVariables/2)],imaginary=B[(nVariables/2+1):nVariables]);
-            nVariables <- length(B);
-            CFValue <- res$objective;
-
-            if(print_level_hidden>0){
-                print(res);
+        }
+        else{
+            # The vector B contains (in this sequence):
+            # 1. paramExo,
+            # 2. paramAR,
+            # 3. paramMA.
+            if(is.null(B)){
+                # If this is d=0 model
+                if(iOrder==0){
+                    B <- as.vector(invert(t(Conj(matrixXreg[,1:(nVariablesExo+arOrder), drop=FALSE])) %*%
+                                              matrixXreg[,1:(nVariablesExo+arOrder), drop=FALSE]) %*%
+                                       t(Conj(matrixXreg[,1:(nVariablesExo+arOrder), drop=FALSE])) %*% y);
+                }
+                else{
+                    matrixXregForDiffs <- iModelDesign();
+                    B <- as.vector(invert(t(Conj(matrixXregForDiffs)) %*% matrixXregForDiffs) %*%
+                                       t(Conj(matrixXregForDiffs)) %*% diff(y,differences=iOrder));
+                }
+                if(maOrder>0){
+                    # Add initial values for the maOrder
+                    B <- c(B, rep(0.1*(1+1i),maOrder));
+                }
             }
+            res <- estimator(B, print_level);
+            B <- res$B;
+            CFValue <- res$CFValue;
         }
     }
     # If the parameters are provided
@@ -758,42 +854,33 @@ clm <- function(formula, data, subset, na.action,
         B <- parameters;
         nVariables <- length(B);
         if(!is.null(names(B))){
-            variablesNames <- names(B);
+            parametersNames <- names(B);
         }
         else{
-            names(B) <- variablesNames;
-            names(parameters) <- variablesNames;
+            names(B) <- parametersNames;
+            names(parameters) <- parametersNames;
         }
         variablesNamesAll <- colnames(matrixXreg);
         CFValue <- CF(B, loss, y, matrixXreg);
     }
-
 
     # If there were ARI, write down the polynomial
     if(arimaModel){
         ellipsis$orders <- orders;
         # Some models save the first parameter for scale
         nVariablesForReal <- length(B);
-        if(all(c(arOrder,iOrder)>0)){
-            poly1[-1] <- -B[nVariablesForReal-c(1:arOrder)+1];
-            ellipsis$polynomial <- -polyprodcomplex(poly2,poly1)[-1];
-            ellipsis$arima <- c(arOrder,iOrder,0);
+        if(arOrder>0){
+            poly1[-1] <- -B[nVariablesExo+c(1:arOrder)];
         }
-        else if(iOrder>0){
-            ellipsis$polynomial <- -poly2[-1];
-            ellipsis$arima <- c(0,iOrder,0);
-        }
-        else{
-            ellipsis$polynomial <- B[nVariablesForReal-c(1:arOrder)+1];
-            ellipsis$arima <- c(arOrder,0,0);
-        }
+        ellipsis$polynomial <- polyprodcomplex(poly2,poly1)[-1];
         names(ellipsis$polynomial) <- ariNames;
-        ellipsis$arima <- paste0("ARIMA(",paste0(ellipsis$arima,collapse=","),")");
+        ellipsis$arima <- paste0("ARIMA(",paste0(orders,collapse=","),")");
     }
 
     fitterReturn <- fitter(B, y, matrixXreg);
     mu[] <- fitterReturn$mu;
     scale <- fitterReturn$scale;
+    matrixXreg[] <- fitterReturn$matrixXreg;
 
     #### Produce Fisher Information ####
     if(FI){
@@ -806,14 +893,14 @@ clm <- function(formula, data, subset, na.action,
                     "Try a different distribution maybe?", call.=FALSE);
             FI <- diag(1e+100,nVariables);
         }
-        dimnames(FI) <- list(variablesNames,variablesNames);
+        dimnames(FI) <- list(parametersNames,parametersNames);
     }
 
     # Give names to additional parameters
     if(is.null(parameters)){
         parameters <- B;
-        names(parameters) <- variablesNames;
-        names(B) <- variablesNames;
+        names(parameters) <- parametersNames;
+        names(B) <- parametersNames;
     }
 
     ### Fitted values in the scale of the original variable
@@ -846,8 +933,19 @@ clm <- function(formula, data, subset, na.action,
         logLik <- NA;
     }
 
+    modelName <- "CLM";
+    if(arimaModel){
+        if(nVariablesExo-interceptIsNeeded==0){
+            modelName <- ellipsis$arima;
+        }
+        else{
+            modelName <- paste0("ARIMAX(",orders[1],",",orders[2],",",orders[3],")");
+        }
+    }
+
+    #### Return the model ####
     finalModel <- structure(list(coefficients=parameters, FI=FI, fitted=yFitted, residuals=as.vector(errors),
-                                 mu=mu, scale=scale, logLik=logLik,
+                                 mu=mu, scale=scale, logLik=logLik, model=modelName,
                                  loss=loss, lossFunction=lossFunction, lossValue=CFValue,
                                  df.residual=obsInsample-nParam, df=nParam, call=cl, rank=nParam,
                                  data=dataWork, terms=dataTerms,
@@ -1239,7 +1337,6 @@ plot.clm <- function(x, which=c(1,2,4,6), ...){
     x$fitted <- complex2vec(fitted(x));
     x$residuals <- complex2vec(residuals(x));
     x$forecast <- matrix(NA,1,2);
-    x$model <- "VES(ANN)";
     class(x) <- "legion";
 
     if(any(which>=12)){
