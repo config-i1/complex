@@ -872,9 +872,9 @@ clm <- function(formula, data, subset, na.action,
         if(arOrder>0){
             poly1[-1] <- -B[nVariablesExo+c(1:arOrder)];
         }
-        ellipsis$polynomial <- polyprodcomplex(poly2,poly1)[-1];
+        ellipsis$polynomial <- -polyprodcomplex(poly2,poly1)[-1];
         names(ellipsis$polynomial) <- ariNames;
-        ellipsis$arima <- paste0("ARIMA(",paste0(orders,collapse=","),")");
+        ellipsis$arima <- paste0("cARIMA(",paste0(orders,collapse=","),")");
     }
 
     fitterReturn <- fitter(B, y, matrixXreg);
@@ -884,7 +884,7 @@ clm <- function(formula, data, subset, na.action,
 
     #### Produce Fisher Information ####
     if(FI){
-        FI <- hessian(CF, B, h=stepSize, loss=loss, y=y, matrixXreg=matrixXreg);
+        FI <- hessian(CF, B, h=stepSize, loss="likelihood", y=y, matrixXreg=matrixXreg);
 
         if(any(is.nan(FI))){
             warning("Something went wrong and we failed to produce the covariance matrix of the parameters.\n",
@@ -938,7 +938,7 @@ clm <- function(formula, data, subset, na.action,
             modelName <- ellipsis$arima;
         }
         else{
-            modelName <- paste0("ARIMAX(",orders[1],",",orders[2],",",orders[3],")");
+            modelName <- paste0("cARIMAX(",orders[1],",",orders[2],",",orders[3],")");
         }
     }
 
@@ -1125,6 +1125,21 @@ vcov.clm <- function(object, type=NULL, ...){
             # Re() is needed to drop the 0i
             vcov <- Re(invert(matrixXregTrans %*% matrixXreg));
         }
+        ndimVcov <- ncol(vcov);
+
+        if(any(type==c("direct","conjugate"))){
+            vcov[] <- vcov * sigmaValue;
+            rownames(vcov) <- colnames(vcov) <- names(coef(object));
+        }
+        # Likelihood estimate
+        else{
+            for(i in 1:(ndimVcov/2)){
+                for(j in 1:(ndimVcov/2)){
+                    vcov[(1:2)+(i-1)*2,(1:2)+(j-1)*2] <- vcov[(1:2)+(i-1)*2,(1:2)+(j-1)*2] * sigmaValue;
+                }
+            }
+            rownames(vcov) <- colnames(vcov) <- names(complex2mat(coef(object))[,1]);
+        }
     }
     else{
         type <- "matrix";
@@ -1151,48 +1166,29 @@ vcov.clm <- function(object, type=NULL, ...){
         # Make sure that print_level is zero, not to print redundant things out
         newCall$print_level <- 0;
 
-        # Recall alm to get hessian
+        # Recall alm to get Hessian
         FIMatrix <- eval(newCall)$FI;
         # If any row contains all zeroes, then it means that the variable does not impact the likelihood
         brokenVariables <- apply(FIMatrix==0,1,all) | apply(is.nan(FIMatrix),1,any);
-        # If there are issues, try the same stuff, but with a different step size for hessian
+        # If there are issues, try the same stuff, but with a different step size for Hessian
         if(any(brokenVariables)){
             newCall$stepSize <- .Machine$double.eps^(1/6);
             FIMatrix <- eval(newCall)$FI;
         }
 
-        # See if Choleski works... It sometimes fails, when we don't get to the max of likelihood.
-        # vcovMatrixTry <- try(chol2inv(chol(FIMatrix)), silent=TRUE);
-        # if(inherits(vcovMatrixTry,"try-error")){
-        #     warning(paste0("Choleski decomposition of hessian failed, so we had to revert to the simple inversion.\n",
-        #                    "The estimate of the covariance matrix of parameters might be inaccurate.\n"),
-        #             call.=FALSE, immediate.=TRUE);
-            vcovMatrixTry <- try(solve(FIMatrix, diag(nVariables*2), tol=1e-20), silent=TRUE);
-            if(inherits(vcovMatrixTry,"try-error")){
-                vcov <- diag(1e+100,nVariables);
-            }
-            else{
-                vcov <- FIMatrix;
-            }
-        # }
-        # else{
-        #     vcov <- vcovMatrixTry;
-        # }
-    }
-    ndimVcov <- ncol(vcov);
-
-    if(any(type==c("direct","conjugate"))){
-        vcov[] <- vcov * sigmaValue;
-        rownames(vcov) <- colnames(vcov) <- names(coef(object));
-    }
-    # Likelihood estimate
-    else{
-        for(i in 1:(ndimVcov/2)){
-            for(j in 1:(ndimVcov/2)){
-                vcov[(1:2)+(i-1)*2,(1:2)+(j-1)*2] <- vcov[(1:2)+(i-1)*2,(1:2)+(j-1)*2] * sigmaValue;
-            }
+        # Take inverse of the matrix
+        vcovMatrixTry <- try(solve(FIMatrix, diag(nVariables*2), tol=1e-20), silent=TRUE);
+        if(inherits(vcovMatrixTry,"try-error")){
+            vcov <- diag(1e+100,nVariables);
         }
-        rownames(vcov) <- colnames(vcov) <- names(complex2mat(coef(object))[,1]);
+        else{
+            vcov <- vcovMatrixTry;
+        }
+        ndimVcovHalf <- ncol(vcov)/2;
+
+        rownames(vcov)[1:ndimVcovHalf] <- paste0(rownames(vcov)[1:ndimVcovHalf],"_r");
+        rownames(vcov)[ndimVcovHalf+1:ndimVcovHalf] <- paste0(rownames(vcov)[ndimVcovHalf+1:ndimVcovHalf],"_i");
+        colnames(vcov) <- rownames(vcov);
     }
 
     return(vcov);
@@ -1214,7 +1210,7 @@ confint.clm <- function(object, parm, level = 0.95, ...){
     if(object$loss=="likelihood" ||
        (!is.null(object$other$arima) && (object$other$orders[2]!=0 || object$other$orders[3]!=0))){
         # Get covariance matrix
-        parametersSE <- sqrt(diag(vcov(object, type="matrix")));
+        parametersSE <- sqrt(diag(vcov(object, type="matrix")))[parametersNames];
     }
     else{
         parametersSEDir <- Re(diag(vcov(object, type="direct")));
@@ -1352,27 +1348,43 @@ predict.clm <- function(object, newdata=NULL, interval=c("none", "confidence", "
     side <- match.arg(side);
 
     parameters <- coef(object);
-    parametersNames <- names(parameters);
+    parametersNamesAll <- names(parameters);
+
+    interceptIsNeeded <- attr(terms(object),"intercept")!=0;
 
     arimaModel <- !is.null(object$other$arima);
+    nParametersExo <- length(parameters);
     if(arimaModel){
         y <- actuals(object);
         ariOrder <- length(object$other$polynomial);
         arOrder <- object$other$orders[1];
         iOrder <- object$other$orders[2];
         maOrder <- object$other$orders[3];
-        ariParameters <- object$other$polynomial;
+        if(ariOrder>0){
+            ariParameters <- object$other$polynomial;
+        }
+        else{
+            ariParameters <- NULL;
+        }
+        if(maOrder>0){
+            maParameters <- tail(parameters, maOrder);
+        }
+        else{
+            maParameters <- NULL;
+        }
         ariNames <- names(ariParameters);
+        maNames <- names(maParameters);
+
+        nParametersExo[] <- nParametersExo - arOrder - maOrder;
 
         # Split the parameters into normal and polynomial (for ARI)
-        if(arOrder>0){
-            parameters <- parameters[-c(length(parameters)+(1-arOrder):0)];
+        if(arOrder>0 || maOrder>0){
+            parameters <- parameters[1:nParametersExo];
         }
-        nonariParametersNumber <- length(parameters);
         parametersNames <- names(parameters);
 
         # Add ARI polynomials to the parameters
-        parameters <- c(parameters,ariParameters);
+        parameters <- c(parameters,ariParameters,maParameters);
     }
 
     nLevels <- length(level);
@@ -1404,6 +1416,7 @@ predict.clm <- function(object, newdata=NULL, interval=c("none", "confidence", "
     }
     else{
         newdataProvided <- TRUE;
+        h <- nrow(newdata);
 
         # If the formula contains more than just intercept
         if(length(all.vars(formula(object)))>1){
@@ -1436,7 +1449,6 @@ predict.clm <- function(object, newdata=NULL, interval=c("none", "confidence", "
             testFormula[[2]] <- NULL;
             # Expand the data frame
             newdataExpanded <- model.frame(testFormula, newdata);
-            interceptIsNeeded <- attr(terms(newdataExpanded),"intercept")!=0;
 
             #### Temporary solution for model.matrix() ####
             responseName <- all.vars(formula(object))[[1]];
@@ -1461,7 +1473,10 @@ predict.clm <- function(object, newdata=NULL, interval=c("none", "confidence", "
             matrixOfxreg <- matrixOfxreg[,parametersNames,drop=FALSE];
         }
         else{
-            matrixOfxreg <- rep(1, nrow(newdata));
+            matrixOfxreg <- matrix(1, h, 1);
+            if(interceptIsNeeded){
+                colnames(matrixOfxreg) <- "(Intercept)";
+            }
         }
     }
 
@@ -1469,17 +1484,24 @@ predict.clm <- function(object, newdata=NULL, interval=c("none", "confidence", "
         matrixOfxreg <- as.matrix(matrixOfxreg);
     }
 
-    h <- nrow(matrixOfxreg);
-
     if(h==1){
         matrixOfxreg <- matrix(matrixOfxreg, nrow=1);
     }
 
     if(arimaModel){
         # Fill in the tails with the available data
-        matrixOfxregFull <- cbind(matrixOfxreg, matrix(NA,h,ariOrder,dimnames=list(NULL,ariNames)));
-        for(i in 1:ariOrder){
-            matrixOfxregFull[1:min(h,i),nonariParametersNumber+i] <- tail(y,i)[1:min(h,i)];
+        matrixOfxregFull <- cbind(matrixOfxreg, matrix(0,h,ariOrder+maOrder,dimnames=list(NULL,c(ariNames,maNames))));
+        if(ariOrder>0){
+            for(i in 1:ariOrder){
+                matrixOfxregFull[1:min(h,i),nParametersExo+i] <- tail(y,i)[1:min(h,i)];
+            }
+        }
+        # Fill in the tails with the residuals for the MA
+        if(maOrder>0){
+            errors <- residuals(object);
+            for(i in 1:maOrder){
+                matrixOfxregFull[1:min(h,i),nParametersExo+ariOrder+i] <- tail(errors,i)[1:min(h,i)];
+            }
         }
 
         # Produce forecasts iteratively
@@ -1490,11 +1512,11 @@ predict.clm <- function(object, newdata=NULL, interval=c("none", "confidence", "
                 if(i+j-1==h){
                     break;
                 }
-                matrixOfxregFull[i+j,nonariParametersNumber+j] <- ourForecast[i];
+                matrixOfxregFull[i+j,nParametersExo+j] <- ourForecast[i];
             }
         }
         # Redefine the matrix for the vcov
-        matrixOfxreg <- matrixOfxregFull[,1:(nonariParametersNumber+arOrder),drop=FALSE];
+        matrixOfxreg <- matrixOfxregFull[,c(1:(nParametersExo+arOrder),nParametersExo+ariOrder+c(1:maOrder)),drop=FALSE];
     }
     else{
         ourForecast <- as.vector(matrixOfxreg %*% parameters);
@@ -1502,8 +1524,9 @@ predict.clm <- function(object, newdata=NULL, interval=c("none", "confidence", "
     vectorOfVariances <- NULL;
 
     if(interval!="none"){
+        parametersNamesAllComplex <- paste0(rep(parametersNamesAll,each=2),c("_r","_i"));
         matrixOfxreg <- complex2mat(matrixOfxreg);
-        ourVcov <- vcov(object, type="matrix");
+        ourVcov <- vcov(object, type="matrix")[parametersNamesAllComplex,parametersNamesAllComplex];
         # abs is needed for some cases, when the likelihood was not fully optimised
         vectorOfVariances <- matrix(diag(matrixOfxreg %*% ourVcov %*% t(matrixOfxreg)),h,2,byrow=TRUE);
 
@@ -1552,7 +1575,7 @@ plot.predict.clm <- function(x, ...){
     if(!is.null(x$lower)){
         x$PI <- complex2vec(cbind(x$lower,x$upper))[,c(1,3,2,4)];
     }
-    x$model <- "CLM";
+    x$model <- x$model$model;
     class(x) <- "legion";
 
     plot(x, which=7, ...);
