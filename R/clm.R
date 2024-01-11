@@ -1039,8 +1039,8 @@ vcov.clm <- function(object, type=NULL, ...){
     }
 
     nVariables <- length(coef(object));
-    variablesNames <- names(coef(object));
-    interceptIsNeeded <- any(variablesNames=="(Intercept)");
+    parametersNames <- names(coef(object));
+    interceptIsNeeded <- any(parametersNames=="(Intercept)");
     ellipsis <- list(...);
 
     matrixXreg <- object$data;
@@ -1189,6 +1189,10 @@ vcov.clm <- function(object, type=NULL, ...){
         rownames(vcov)[1:ndimVcovHalf] <- paste0(rownames(vcov)[1:ndimVcovHalf],"_r");
         rownames(vcov)[ndimVcovHalf+1:ndimVcovHalf] <- paste0(rownames(vcov)[ndimVcovHalf+1:ndimVcovHalf],"_i");
         colnames(vcov) <- rownames(vcov);
+
+        # Change the order of parameteres
+        parametersNamesAllComplex <- paste0(rep(parametersNames,each=2),c("_r","_i"));
+        vcov <- vcov[parametersNamesAllComplex,parametersNamesAllComplex];
     }
 
     return(vcov);
@@ -1210,7 +1214,7 @@ confint.clm <- function(object, parm, level = 0.95, ...){
     if(object$loss=="likelihood" ||
        (!is.null(object$other$arima) && (object$other$orders[2]!=0 || object$other$orders[3]!=0))){
         # Get covariance matrix
-        parametersSE <- sqrt(diag(vcov(object, type="matrix")))[parametersNames];
+        parametersSE <- sqrt(diag(vcov(object, type="matrix")));
     }
     else{
         parametersSEDir <- Re(diag(vcov(object, type="direct")));
@@ -1524,9 +1528,8 @@ predict.clm <- function(object, newdata=NULL, interval=c("none", "confidence", "
     vectorOfVariances <- NULL;
 
     if(interval!="none"){
-        parametersNamesAllComplex <- paste0(rep(parametersNamesAll,each=2),c("_r","_i"));
         matrixOfxreg <- complex2mat(matrixOfxreg);
-        ourVcov <- vcov(object, type="matrix")[parametersNamesAllComplex,parametersNamesAllComplex];
+        ourVcov <- vcov(object, type="matrix");
         # abs is needed for some cases, when the likelihood was not fully optimised
         vectorOfVariances <- matrix(diag(matrixOfxreg %*% ourVcov %*% t(matrixOfxreg)),h,2,byrow=TRUE);
 
