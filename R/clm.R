@@ -665,18 +665,24 @@ clm <- function(formula, data, subset, na.action,
         maOrder <- abs(maOrder);
     }
     ariOrder <- arOrder + iOrder;
-    arimaModel <- ifelseFast(ariOrder>0, TRUE, FALSE) || ifelseFast(maOrder>0, TRUE, FALSE);
+
+    arOrderUsed <- arOrder>0;
+    iOrderUsed <- iOrder>0;
+    ariOrderUsed <- ariOrder>0;
+    maOrderUsed <- maOrder>0;
+
+    arimaModel <- ifelseFast(ariOrderUsed, TRUE, FALSE) || ifelseFast(maOrderUsed, TRUE, FALSE);
 
     # Permutations for the ARIMA
     if(arimaModel){
         # Create polynomials for the ar, i and ma orders
-        if(arOrder>0){
+        if(arOrderUsed){
             poly1 <- rep(1,arOrder+1);
         }
         else{
             poly1 <- c(1);
         }
-        if(iOrder>0){
+        if(iOrderUsed){
             poly2 <- c(1,-1);
             if(iOrder>1){
                 for(j in 1:(iOrder-1)){
@@ -687,14 +693,14 @@ clm <- function(formula, data, subset, na.action,
         else{
             poly2 <- c(1);
         }
-        if(maOrder>0){
+        if(maOrderUsed){
             poly3 <- rep(1,maOrder+1);
         }
         else{
             poly3 <- c(1);
         }
 
-        if(ariOrder>0){
+        if(ariOrderUsed){
             # Expand the response variable to have ARI
             ariElements <- xregExpander(complex2vec(y), lags=-c(1:ariOrder), gaps="auto")[,-c(1,ariOrder+2),drop=FALSE];
             ariElements <- vec2complex(ariElements[,rep(1:ariOrder,each=2)+rep(c(0,ariOrder),ariOrder)]);
@@ -714,16 +720,16 @@ clm <- function(formula, data, subset, na.action,
         }
 
         # Adjust number of variables
-        nVariables <- nVariables + arOrder * (arOrder>0) + maOrder * (maOrder>0);
+        nVariables <- nVariables + arOrder * arOrderUsed + maOrder * maOrderUsed;
 
         # Give names to AR elements
-        if(arOrder>0){
+        if(arOrderUsed){
             arNames <- paste0(responseName,"Lag",c(1:arOrder));
             parametersNames <- c(parametersNames,arNames);
         }
 
         # Amend the matrix for MA to have columns for the previous errors
-        if(maOrder>0){
+        if(maOrderUsed){
             maElements <- matrix(0,obsInsample,maOrder);
             maNames <- paste0("eLag",c(1:maOrder));
             variablesNames <- c(variablesNames,maNames);
@@ -744,7 +750,7 @@ clm <- function(formula, data, subset, na.action,
         # Use only AR elements of the matrix, take differences for the initialisation purposes
         # This matrix does not contain columns for iOrder and has fewer observations to match diff(y)
         matrixXregForDiffs <- matrixXreg[,-(nVariablesExo+arOrder+1:(iOrder+maOrder)),drop=FALSE];
-        if(arOrder>0){
+        if(arOrderUsed){
             matrixXregForDiffs[-c(1:iOrder),nVariablesExo+c(1:arOrder)] <- diff(matrixXregForDiffs[,nVariablesExo+c(1:arOrder)],
                                                                                 differences=iOrder);
             # matrixXregForDiffs[c(1:iOrder),nVariablesExo+c(1:arOrder)] <- colMeans(matrixXregForDiffs[,nVariablesExo+c(1:arOrder), drop=FALSE]);
@@ -786,7 +792,7 @@ clm <- function(formula, data, subset, na.action,
                 B <- as.vector(invert(t(matrixXregForDiffs) %*% matrixXregForDiffs) %*%
                                    t(matrixXregForDiffs) %*% diff(y,differences=iOrder));
             }
-            if(maOrder>0){
+            if(maOrderUsed){
                 # Add initial values for the maOrder
                 B <- c(B, rep(0.1*(1+1i),maOrder));
                 # Estimate the model
@@ -810,7 +816,7 @@ clm <- function(formula, data, subset, na.action,
                 B <- as.vector(invert(t(Conj(matrixXregForDiffs)) %*% matrixXregForDiffs) %*%
                                    t(Conj(matrixXregForDiffs)) %*% diff(y,differences=iOrder));
             }
-            if(maOrder>0){
+            if(maOrderUsed){
                 # Add initial values for the maOrder
                 B <- c(B, rep(0.1*(1+1i),maOrder));
                 # Estimate the model
@@ -839,7 +845,7 @@ clm <- function(formula, data, subset, na.action,
                     B <- as.vector(invert(t(Conj(matrixXregForDiffs)) %*% matrixXregForDiffs) %*%
                                        t(Conj(matrixXregForDiffs)) %*% diff(y,differences=iOrder));
                 }
-                if(maOrder>0){
+                if(maOrderUsed){
                     # Add initial values for the maOrder
                     B <- c(B, rep(0.1*(1+1i),maOrder));
                 }
@@ -869,7 +875,7 @@ clm <- function(formula, data, subset, na.action,
         ellipsis$orders <- orders;
         # Some models save the first parameter for scale
         nVariablesForReal <- length(B);
-        if(arOrder>0){
+        if(arOrderUsed){
             poly1[-1] <- -B[nVariablesExo+c(1:arOrder)];
         }
         ellipsis$polynomial <- -polyprodcomplex(poly2,poly1)[-1];
@@ -1364,13 +1370,18 @@ predict.clm <- function(object, newdata=NULL, interval=c("none", "confidence", "
         arOrder <- object$other$orders[1];
         iOrder <- object$other$orders[2];
         maOrder <- object$other$orders[3];
-        if(ariOrder>0){
+
+        arOrderUsed <- arOrder>0;
+        ariOrderUsed <- ariOrder>0;
+        maOrderUsed <- maOrder>0;
+
+        if(ariOrderUsed){
             ariParameters <- object$other$polynomial;
         }
         else{
             ariParameters <- NULL;
         }
-        if(maOrder>0){
+        if(maOrderUsed){
             maParameters <- tail(parameters, maOrder);
         }
         else{
@@ -1382,7 +1393,7 @@ predict.clm <- function(object, newdata=NULL, interval=c("none", "confidence", "
         nParametersExo[] <- nParametersExo - arOrder - maOrder;
 
         # Split the parameters into normal and polynomial (for ARI)
-        if(arOrder>0 || maOrder>0){
+        if(arOrderUsed || maOrderUsed){
             parameters <- parameters[1:nParametersExo];
         }
         parametersNames <- names(parameters);
@@ -1495,13 +1506,13 @@ predict.clm <- function(object, newdata=NULL, interval=c("none", "confidence", "
     if(arimaModel){
         # Fill in the tails with the available data
         matrixOfxregFull <- cbind(matrixOfxreg, matrix(0,h,ariOrder+maOrder,dimnames=list(NULL,c(ariNames,maNames))));
-        if(ariOrder>0){
+        if(ariOrderUsed){
             for(i in 1:ariOrder){
                 matrixOfxregFull[1:min(h,i),nParametersExo+i] <- tail(y,i)[1:min(h,i)];
             }
         }
         # Fill in the tails with the residuals for the MA
-        if(maOrder>0){
+        if(maOrderUsed){
             errors <- residuals(object);
             for(i in 1:maOrder){
                 matrixOfxregFull[1:min(h,i),nParametersExo+ariOrder+i] <- tail(errors,i)[1:min(h,i)];
@@ -1512,7 +1523,7 @@ predict.clm <- function(object, newdata=NULL, interval=c("none", "confidence", "
         ourForecast <- vector("numeric", h);
         for(i in 1:h){
             ourForecast[i] <- matrixOfxregFull[i,] %*% parameters;
-            if(ariOrder>0){
+            if(ariOrderUsed){
                 for(j in 1:ariOrder){
                     if(i+j-1==h){
                         break;
