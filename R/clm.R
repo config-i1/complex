@@ -1533,6 +1533,8 @@ predict.clm <- function(object, newdata=NULL, interval=c("none", "confidence", "
         # abs is needed for some cases, when the likelihood was not fully optimised
         vectorOfVariances <- matrix(diag(matrixOfxreg %*% ourVcov %*% t(matrixOfxreg)),h,2,byrow=TRUE);
 
+        #### cARIMA variance is different and needs to be calculated correctly here ####
+
         yUpper <- yLower <- matrix(NA, h, nLevels);
         if(interval=="confidence"){
             for(i in 1:nLevels){
