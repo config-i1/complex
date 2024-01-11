@@ -7,7 +7,7 @@
 \alias{summary.clm}
 \title{Complex Linear Model}
 \usage{
-clm(formula, data, subset, na.action, loss = c("OLS", "CLS", "likelihood",
+clm(formula, data, subset, na.action, loss = c("likelihood", "OLS", "CLS",
   "MSE", "MAE", "HAM"), orders = c(0, 0, 0), parameters = NULL,
   fast = FALSE, ...)
 

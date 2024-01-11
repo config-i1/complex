@@ -133,7 +133,7 @@
 #' @rdname clm
 #' @export clm
 clm <- function(formula, data, subset, na.action,
-                loss=c("OLS","CLS","likelihood","MSE","MAE","HAM"),
+                loss=c("likelihood","OLS","CLS","MSE","MAE","HAM"),
                 orders=c(0,0,0),
                 parameters=NULL, fast=FALSE, ...){
     # Start measuring the time of calculations
