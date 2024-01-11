@@ -1512,11 +1512,13 @@ predict.clm <- function(object, newdata=NULL, interval=c("none", "confidence", "
         ourForecast <- vector("numeric", h);
         for(i in 1:h){
             ourForecast[i] <- matrixOfxregFull[i,] %*% parameters;
-            for(j in 1:ariOrder){
-                if(i+j-1==h){
-                    break;
+            if(ariOrder>0){
+                for(j in 1:ariOrder){
+                    if(i+j-1==h){
+                        break;
+                    }
+                    matrixOfxregFull[i+j,nParametersExo+j] <- ourForecast[i];
                 }
-                matrixOfxregFull[i+j,nParametersExo+j] <- ourForecast[i];
             }
         }
         # Redefine the matrix for the vcov
