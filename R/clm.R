@@ -1535,7 +1535,7 @@ predict.clm <- function(object, newdata=NULL, interval=c("none", "confidence", "
                 }
             }
         }
-        if(maOrder>0){
+        if(maOrderUsed){
             # Redefine the matrix for the vcov
             matrixOfxreg <- matrixOfxregFull[,c(1:(nParametersExo+arOrder),nParametersExo+ariOrder+c(1:maOrder)),drop=FALSE];
         }
