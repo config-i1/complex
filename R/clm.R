@@ -1344,6 +1344,9 @@ plot.clm <- function(x, which=c(1,2,4,6), ...){
     x$forecast <- matrix(NA,1,2);
     class(x) <- "legion";
 
+    # This is just a fix to make errorType() and plot.legion() work
+    x$model <- "VETS(ANN)"
+
     if(any(which>=12)){
         which <- which[which<12];
     }
