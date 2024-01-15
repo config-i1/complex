@@ -1535,8 +1535,10 @@ predict.clm <- function(object, newdata=NULL, interval=c("none", "confidence", "
                 }
             }
         }
-        # Redefine the matrix for the vcov
-        matrixOfxreg <- matrixOfxregFull[,c(1:(nParametersExo+arOrder),nParametersExo+ariOrder+c(1:maOrder)),drop=FALSE];
+        if(maOrder>0){
+            # Redefine the matrix for the vcov
+            matrixOfxreg <- matrixOfxregFull[,c(1:(nParametersExo+arOrder),nParametersExo+ariOrder+c(1:maOrder)),drop=FALSE];
+        }
     }
     else{
         ourForecast <- as.vector(matrixOfxreg %*% parameters);
