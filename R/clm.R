@@ -1358,7 +1358,7 @@ predict.clm <- function(object, newdata=NULL, interval=c("none", "confidence", "
     side <- match.arg(side);
 
     parameters <- coef(object);
-    parametersNamesAll <- names(parameters);
+    parametersNames <- parametersNamesAll <- names(parameters);
 
     interceptIsNeeded <- attr(terms(object),"intercept")!=0;
 
