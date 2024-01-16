@@ -1540,6 +1540,9 @@ predict.clm <- function(object, newdata=NULL, interval=c("none", "confidence", "
             # Redefine the matrix for the vcov
             matrixOfxreg <- matrixOfxregFull[,c(1:(nParametersExo+arOrder),nParametersExo+ariOrder+c(1:maOrder)),drop=FALSE];
         }
+        else{
+            matrixOfxreg <- matrixOfxregFull[,1:(nParametersExo+arOrder),drop=FALSE];
+        }
     }
     else{
         ourForecast <- as.vector(matrixOfxreg %*% parameters);
