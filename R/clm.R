@@ -938,7 +938,7 @@ clm <- function(formula, data, subset, na.action,
         logLik <- NA;
     }
 
-    modelName <- "CLM";
+    modelName <- "Complex Linear Regression";
     if(arimaModel){
         if(nVariablesExo-interceptIsNeeded==0){
             modelName <- ellipsis$arima;
@@ -1286,6 +1286,7 @@ summary.clm <- function(object, level=0.95, ...){
         ourReturn$ICs <- ICs;
     }
     ourReturn$loss <- object$loss;
+    ourReturn$model <- object$model;
     ourReturn$other <- object$other;
     ourReturn$responseName <- formula(object)[[2]];
 
@@ -1313,7 +1314,7 @@ print.summary.clm <- function(x, ...){
         digits <- ellipsis$digits;
     }
 
-    cat("Complex Linear Regression estimated via clm()\n");
+    cat(x$model, "estimated via clm()\n");
     cat(paste0("Response variable: ", paste0(x$responseName,collapse="")));
     cat(paste0("\nLoss function used in estimation: ",x$loss));
 
