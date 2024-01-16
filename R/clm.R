@@ -1158,7 +1158,7 @@ vcov.clm <- function(object, type=NULL, ...){
         else{
             newCall$formula <- as.formula(paste0("`",all.vars(newCall$formula)[1],"`~.-1"));
         }
-        newCall$data <- object$data[,!(colnames(object$data) %in% names(object$other$polynomial))];
+        newCall$data <- object$data[,!(colnames(object$data) %in% names(object$other$polynomial)), drop=FALSE];
         newCall$subset <- object$subset;
         # This needs to be likelihood, otherwise it won't work with complex variables
         newCall$loss <- "likelihood";
@@ -1185,7 +1185,8 @@ vcov.clm <- function(object, type=NULL, ...){
         # Take inverse of the matrix
         vcovMatrixTry <- try(solve(FIMatrix, diag(nVariables*2), tol=1e-20), silent=TRUE);
         if(inherits(vcovMatrixTry,"try-error")){
-            vcov <- diag(1e+100,nVariables);
+            vcov <- diag(1e+100,nVariables*2);
+            rownames(vcov) <- rep(parametersNames,2);
         }
         else{
             vcov <- vcovMatrixTry;
