@@ -1550,6 +1550,10 @@ predict.clm <- function(object, newdata=NULL, interval=c("none", "confidence", "
     vectorOfVariances <- NULL;
 
     if(interval!="none"){
+        if(arimaModel){
+            warning("Prediction and confidence intervals in cARIMA is still work in progress. ",
+                    "Use with care.", call.=FALSE);
+        }
         matrixOfxreg <- complex2mat(matrixOfxreg);
         ourVcov <- vcov(object, type="matrix");
         # abs is needed for some cases, when the likelihood was not fully optimised
