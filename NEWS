@@ -1,4 +1,4 @@
-complex v0.0.2 (Release data: 2024-01-09)
+complex v0.0.2 (Release data: 2024-01-20)
 
 Changes:
 * Added pseudo- (or "complex") variance, covariance and correlation, cvar, ccov and ccor functions respectively.
@@ -22,6 +22,7 @@ Changes:
 * clm() now supports log() etc in the formula. Interraction effects are still wrong.
 * orders in clm(), allowing to specify ARIMA(p,d,q) orders. Curently only ARIMA(p,d,0) is supported.
 * cARIMA(p,d,q) is now available.
+* cscale() and cdescale() functions to scale real and imaginary parts of a complex variable.
 
 
 complex v0.0.1 (Release data: 2019-07-01)
