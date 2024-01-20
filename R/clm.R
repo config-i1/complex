@@ -1220,8 +1220,8 @@ confint.clm <- function(object, parm, level = 0.95, ...){
     # If this is the likelihood or we did the numeric vcov
     if(object$loss=="likelihood" ||
        (!is.null(object$other$arima) && (object$other$orders[2]!=0 || object$other$orders[3]!=0))){
-        # Get covariance matrix
-        parametersSE <- sqrt(diag(vcov(object, type="matrix")));
+        # Get covariance matrix. abs() is a failsafe mechanism
+        parametersSE <- sqrt(diag(abs(vcov(object, type="matrix"))));
     }
     else{
         parametersSEDir <- Re(diag(vcov(object, type="direct")));
