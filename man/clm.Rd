@@ -8,8 +8,8 @@
 \title{Complex Linear Model}
 \usage{
 clm(formula, data, subset, na.action, loss = c("likelihood", "OLS", "CLS",
-  "MSE", "MAE", "HAM"), orders = c(0, 0, 0), parameters = NULL,
-  fast = FALSE, ...)
+  "MSE", "MAE", "HAM"), orders = c(0, 0, 0), scaling = c("normalisation",
+  "standardisation", "max", "none"), parameters = NULL, fast = FALSE, ...)
 
 \method{sigma}{clm}(object, type = NULL, ...)
 
@@ -54,7 +54,10 @@ example:
 \code{lossFunction <- function(actual, fitted, B, xreg) return(mean(abs(actual-fitted)))}
 \code{loss=lossFunction}}
 
-\item{orders}{The vector of orders of complex ARIMA(p,d,q).}
+\item{orders}{vector of orders of complex ARIMA(p,d,q).}
+
+\item{scaling}{NOT YET IMPLEMENTED!!! Defines what type of scaling to do for the variables.
+See \link[complex]{cscale} for the explanation of the options.}
 
 \item{parameters}{vector of parameters of the linear model. When \code{NULL}, it
 is estimated.}

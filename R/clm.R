@@ -41,7 +41,9 @@
 #' \code{lossFunction <- function(actual, fitted, B, xreg) return(mean(abs(actual-fitted)))}
 #' \code{loss=lossFunction}
 #'
-#' @param orders The vector of orders of complex ARIMA(p,d,q).
+#' @param orders vector of orders of complex ARIMA(p,d,q).
+#' @param scaling NOT YET IMPLEMENTED!!! Defines what type of scaling to do for the variables.
+#' See \link[complex]{cscale} for the explanation of the options.
 #' @param parameters vector of parameters of the linear model. When \code{NULL}, it
 #' is estimated.
 #' @param fast if \code{TRUE}, then the function won't check whether
@@ -134,7 +136,7 @@
 #' @export clm
 clm <- function(formula, data, subset, na.action,
                 loss=c("likelihood","OLS","CLS","MSE","MAE","HAM"),
-                orders=c(0,0,0),
+                orders=c(0,0,0), scaling=c("normalisation","standardisation","max","none"),
                 parameters=NULL, fast=FALSE, ...){
     # Start measuring the time of calculations
     startTime <- Sys.time();
@@ -153,6 +155,8 @@ clm <- function(formula, data, subset, na.action,
         lossFunction <- NULL;
         loss <- match.arg(loss);
     }
+
+    scaling <- match.arg(scaling);
 
     #### Functions used in the estimation ####
     ifelseFast <- function(condition, yes, no){
@@ -777,6 +781,10 @@ clm <- function(formula, data, subset, na.action,
 
         return(matrixXregForDiffs)
     }
+
+    # Scale all variables if this is required
+    # if(scaling!="none"){
+    # }
 
     #### Estimate parameters of the model ####
     if(is.null(parameters)){
