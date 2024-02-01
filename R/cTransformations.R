@@ -51,7 +51,12 @@ cscale <- function(y, scaling=c("normalisation","standardisation","max")){
                        imaginary=yIm/max(yIm));
     }
 
-    return(y);
+    if(all(yIm==0)){
+        return(Re(y));
+    }
+    else{
+        return(y);
+    }
 }
 
 #' @rdname cscale
@@ -79,5 +84,10 @@ cdescale <- function(yScaled, y, scaling=c("normalisation","standardisation","ma
                              imaginary=yScaledIm*max(yIm));
     }
 
-    return(yScaled);
+    if(all(yIm==0)){
+        return(Re(yScaled));
+    }
+    else{
+        return(yScaled);
+    }
 }
