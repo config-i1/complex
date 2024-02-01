@@ -1,4 +1,4 @@
-#' Functions to scale real and imaginary parts of a complex variable
+#' Functions scale real and imaginary parts of a complex variable
 #'
 #' Function \code{cscale()} will do the scaling based on the selected method, while
 #' the function \code{cdescale()} will transform the variable to get to the
@@ -89,5 +89,71 @@ cdescale <- function(yScaled, y, scaling=c("normalisation","standardisation","ma
     }
     else{
         return(yScaled);
+    }
+}
+
+#' Functions that transform real and imaginary parts of a complex variable
+#'
+#' Function \code{clog()} will take logarithm of real and imaginary parts separately
+#' and then merge the resulting variable in the complex one. The function
+#' \code{cexp()} does the opposite transform, taking exponent of parts and then
+#' merging them.
+#'
+#' @template references
+#' @template author
+#'
+#' @keywords univar
+#'
+#' @param y vector of a complex variable in the original scale.
+#' @param base a positive or complex number: the base with respect to which
+#' logarithms/powers are computed. Defaults to exp(1).
+#'
+#' @return A vector of the same size as \code{y}, containing transformed complex variable.
+#'
+#' @seealso \code{\link[complex]{cscale}}
+#'
+#' @examples
+#'
+#' # Generate random complex variables
+#' y <- complex(real=rnorm(100,100,10), imaginary=rnorm(100,100,10))
+#'
+#' yLog <- clog(y)
+#' cexp(yLog)
+#'
+#' @rdname clog
+#' @export
+clog <- function(y, base=exp(1)){
+    # The function takes logarithms of both parts of the complex variable
+
+    yRe <- Re(y);
+    yIm <- Im(y);
+
+    y[] <- complex(real=log(yRe, base),
+                   imaginary=log(yIm, base));
+
+    if(all(yIm==0)){
+        return(Re(y));
+    }
+    else{
+        return(y);
+    }
+}
+
+#' @rdname clog
+#' @export
+cexp <- function(y, base=exp(1)){
+    # The function takes exponent of both parts of the complex variable
+
+    yRe <- Re(y);
+    yIm <- Im(y);
+
+    y[] <- complex(real=base^yRe,
+                   imaginary=base^yIm);
+
+    if(all(yIm==0)){
+        return(Re(y));
+    }
+    else{
+        return(y);
     }
 }

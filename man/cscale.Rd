@@ -3,7 +3,7 @@
 \name{cscale}
 \alias{cscale}
 \alias{cdescale}
-\title{Functions to scale real and imaginary parts of a complex variable}
+\title{Functions scale real and imaginary parts of a complex variable}
 \usage{
 cscale(y, scaling = c("normalisation", "standardisation", "max"))
 
