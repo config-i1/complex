@@ -1229,11 +1229,11 @@ confint.clm <- function(object, parm, level = 0.95, ...){
     if(object$loss=="likelihood" ||
        (!is.null(object$other$arima) && (object$other$orders[2]!=0 || object$other$orders[3]!=0))){
         # Get covariance matrix. abs() is a failsafe mechanism
-        parametersSE <- sqrt(diag(abs(vcov(object, type="matrix"))));
+        parametersSE <- sqrt(diag(abs(vcov(object, type="matrix", ...))));
     }
     else{
-        parametersSEDir <- Re(diag(vcov(object, type="direct")));
-        parametersSEConj <- Re(diag(vcov(object, type="conjugate")));
+        parametersSEDir <- Re(diag(vcov(object, type="direct", ...)));
+        parametersSEConj <- Re(diag(vcov(object, type="conjugate", ...)));
         parametersSE <- vector("numeric", parametersLength);
         # Real values
         parametersSE[1:(parametersLength/2)*2-1] <- sqrt((parametersSEConj + parametersSEDir)/2);
