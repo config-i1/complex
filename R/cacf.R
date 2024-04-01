@@ -207,7 +207,7 @@ plot.cacf <- function(x, which=c(1,2), ask=length(which)>1, level=0.95, ...){
     # Number of degrees of freedom: n-tau-1, where n-tau is the sample size
     df <- (x$n.used - c(1:length(x$acf)) - 1);
     tValues <- qt((1+level)/2,df=df);
-    rCritical <- tValues/sqrt(100-2+tValues^2);
+    rCritical <- tValues/sqrt(x$n.used-2+tValues^2);
     xMethod <- paste(toupper(substr(x$method, 1, 1)), substr(x$method, 2, nchar(x$method)), sep="")
 
     if(x$method=="direct" || (x$method=="conjugate" && any(x$type==c("covariance","partial")))){
@@ -223,6 +223,14 @@ plot.cacf <- function(x, which=c(1,2), ask=length(which)>1, level=0.95, ...){
             devAskNewPage(TRUE);
             on.exit(devAskNewPage(FALSE));
         }
+        xReLab <- switch(x$type,
+                         "covariance"="Real cACF",
+                         "correlation"="Real cACF",
+                         "partial"="Real cPACF");
+        xImLab <- switch(x$type,
+                         "covariance"="Imaginary cACF",
+                         "correlation"="Imaginary cACF",
+                         "partial"="Imaginary cPACF");
         for(i in which){
             if(i==1){
                 parDefault <- par(no.readonly=TRUE);
@@ -233,7 +241,7 @@ plot.cacf <- function(x, which=c(1,2), ask=length(which)>1, level=0.95, ...){
                 layout(matrix(c(1,2,1,3),2,2));
                 par(mar=c(4,4,4,2));
                 plot(x$acf, type="b",
-                     xlab="Real cACF", ylab="Imaginary cACF", main=mainLabel,
+                     xlab=xReLab, ylab=xImLab, main=mainLabel,
                      xlim=xRange, ylim=yRange);
                 abline(h=0, col="grey", lty=2);
                 abline(v=0, col="grey", lty=2);
@@ -242,7 +250,7 @@ plot.cacf <- function(x, which=c(1,2), ask=length(which)>1, level=0.95, ...){
                 text(Re(x$acf), Im(x$acf), c(1:length(x$acf)), pos=3);
 
                 par(mar=c(4,4,1,2))
-                plot(Re(x$acf), type="h", xlab="Lag", ylab="Real cACF",
+                plot(Re(x$acf), type="h", xlab="Lag", ylab=xReLab,
                      ylim=xRange);
                 abline(h=0);
                 lines(rCritical, col="red", lty=2);
@@ -255,7 +263,7 @@ plot.cacf <- function(x, which=c(1,2), ask=length(which)>1, level=0.95, ...){
                     text(signigicantOnes, acfSignificant, signigicantOnes, pos=c(1,3)[(acfSignificant>0)*1+1]);
                 }
 
-                plot(Im(x$acf), type="h", xlab="Lag", ylab="Imaginary cACF",
+                plot(Im(x$acf), type="h", xlab="Lag", ylab=xImLab,
                      ylim=yRange);
                 abline(h=0);
                 lines(rCritical, col="red", lty=2);
@@ -320,7 +328,9 @@ plot.cacf <- function(x, which=c(1,2), ask=length(which)>1, level=0.95, ...){
         do.call("plot", ellipsis);
         abline(h=0);
         lines(rCritical, col="red", lty=2);
-        # lines(-rCritical, col="red", lty=2);
+        if(x$method=="pearson"){
+            lines(-rCritical, col="red", lty=2);
+        }
 
         # Add text for the significant ones
         signigicantOnes <- which(abs(x$acf)>rCritical);
