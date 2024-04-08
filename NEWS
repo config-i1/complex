@@ -1,4 +1,4 @@
-complex v0.0.2 (Release data: 2024-02-01)
+complex v1.0.0 (Release data: 2024-04-08)
 
 Changes:
 * Added pseudo- (or "complex") variance, covariance and correlation, cvar, ccov and ccor functions respectively.
