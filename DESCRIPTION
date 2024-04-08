@@ -12,7 +12,7 @@ Description: Set of function implementing the instruments for complex-valued mod
              including time series analysis and forecasting. This is based on the monograph
              by Svetunkov Sergey and Svetunkov Ivan "Complex-valued Econometrics with Examples in R"
              which is in press by Springer.
-License: GPL (>=2)
+License: LGPL-2.1
 Depends:
     R (>= 3.5.0),
     greybox (>= 0.5.0),
