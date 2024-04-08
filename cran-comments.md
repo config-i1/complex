@@ -29,7 +29,12 @@ Successful checks for:
 
 
 ## win-builder
+>Possibly misspelled words in DESCRIPTION:
+>  Sergey (13:27)
+>  Springer (14:35)
+>  Svetunkov (13:17, 13:38)
 
+They are not misspelled.
 
 
 ## R-hub
