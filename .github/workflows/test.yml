@@ -3,7 +3,7 @@ name: R-CMD-check
 on:
     pull_request:
     workflow_dispatch:
-    schedule:
+    #schedule:
     # - cron:  '0 0 * * 1'
 
 jobs:
