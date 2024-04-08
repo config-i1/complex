@@ -5,17 +5,18 @@ date: "8 April 2024"
 output: html_document
 ---
 
-## Version
+# Version
 This is the initial release of the package `complex`, v1.0.0
 
 
-## Test environments
-* local Ubuntu 23.10, R 4.3.1
+# Test environments
+* Local Ubuntu 23.10, R 4.3.1
+* Github Actions
 * win-builder (devel and release)
 * rhub with rhub::check_for_cran() command
 
 
-## R CMD check results
+## Local Ubuntu: R CMD check results
 >R CMD check results
 >0 errors | 0 warnings | 0 notes
 
@@ -23,9 +24,9 @@ This is the initial release of the package `complex`, v1.0.0
 ## Github actions
 Successful checks for:
 
-- Windows latest release with R 4.2.3
-- MacOS latest macOS Big Sur 10.16 with R 4.2.3
-- Ubuntu 20.04.5 with R 4.2.3
+- Windows latest release (2022 10.0.20348) with R 4.3.3
+- MacOS latest release (macOS 12.7.4) with R 4.3.3
+- Ubuntu 22.04.4 with R 4.3.3
 
 
 ## win-builder
@@ -51,5 +52,5 @@ This is absurd! There is no file/directory "NULL" in the project. This seems lik
 
 Once again, no such file or directory present in the package, probably an error on the server.
 
-## Downstream dependencies
+# Downstream dependencies
 No reverse dependencies yet
