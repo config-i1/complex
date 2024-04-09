@@ -1,9 +1,12 @@
 ---
 title: "Cran Comments"
 author: "Ivan Svetunkov"
-date: "8 April 2024"
+date: "9 April 2024"
 output: html_document
 ---
+
+# Resubmission comment
+Fixed the issue with the vignettebuilder in DESCRIPTION
 
 # Version
 This is the initial release of the package `complex`, v1.0.0

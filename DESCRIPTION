@@ -2,7 +2,7 @@ Package: complex
 Type: Package
 Title: Time Series Analysis and Forecasting Using Complex Variables
 Version: 1.0.0
-Date: 2024-04-08
+Date: 2024-04-09
 Authors@R: person("Ivan", "Svetunkov", email = "ivan@svetunkov.com", role = c("aut", "cre"),
                   comment="Lecturer at Centre for Marketing Analytics and Forecasting, Lancaster University, UK")
 URL: https://github.com/config-i1/complex

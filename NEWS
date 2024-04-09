@@ -1,8 +1,8 @@
-complex v1.0.0 (Release data: 2024-04-08)
+complex v1.0.0 (Release data: 2024-04-09)
 
 Changes:
-* Added pseudo- (or "complex") variance, covariance and correlation, cvar, ccov and ccor functions respectively.
-* Implemented complex (pseudo) ACF via cacf() and partial CACF via pcacf().
+* Added pseudo- (or "direct") variance, covariance and correlation, cvar, ccov and ccor functions respectively.
+* Implemented direct (pseudo) ACF via cacf() and partial CACF via pcacf().
 * clm() - complex linear model for complex regression models.
 * complex2mat() and complex2vec() functions for switching between complex variables and matrices/vectors.
 * mat2complex() and vec2complex() functions to reverse what the previous two do.
