@@ -11,7 +11,7 @@ Language: en-GB
 Description: Set of function implementing the instruments for complex-valued modelling,
              including time series analysis and forecasting. This is based on the monograph
              by Svetunkov Sergey and Svetunkov Ivan "Complex-valued Econometrics with Examples in R"
-             which is in press by Springer.
+             which is in press by Springer (expected to be published in 2024).
 License: LGPL-2.1
 Depends:
     R (>= 3.5.0),
