@@ -6,7 +6,8 @@ output: html_document
 ---
 
 # Resubmission comment
-Fixed the issue with the vignettebuilder in DESCRIPTION
+Fixed issues outlined by Konstanze Lauseker, including "dontrun" for a function and a monograph details in the "DESCRIPTION" file.
+
 
 # Version
 This is the initial release of the package `complex`, v1.0.0
