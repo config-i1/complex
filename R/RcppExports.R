@@ -16,7 +16,7 @@
 #'
 #' @examples
 #'
-#' \dontrun{invert(matrix(complex(real=c(1,2), imaginary=c(1.1,2.1)), 2, 2))}
+#' invert(matrix(complex(real=c(1,2), imaginary=c(1.1,2.1)), 2, 2))
 #'
 #' @useDynLib complex
 #' @export
