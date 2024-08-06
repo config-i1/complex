@@ -2,7 +2,6 @@
 [![CRAN_Status_Badge](https://www.r-pkg.org/badges/version/complex)](https://cran.r-project.org/package=complex)
 [![Downloads](https://cranlogs.r-pkg.org/badges/complex)](https://cran.r-project.org/package=complex)
 [![R-CMD-check](https://github.com/config-i1/complex/actions/workflows/test.yml/badge.svg)](https://github.com/config-i1/complex/actions/workflows/test.yml)
-[![ko-fi](https://ivan.svetunkov.ru/ko-fi.png)](https://ko-fi.com/G2G51C4C4)
 
 Time series analysis and forecasting using complex variables
 
