@@ -96,6 +96,6 @@ cacf(x)
 \link[stats]{acf}, \link[complex]{ccor}
 }
 \author{
-Ivan Svetunkov, \email{ivan@svetunkov.ru}
+Ivan Svetunkov, \email{ivan@svetunkov.com}
 }
 \keyword{univar}

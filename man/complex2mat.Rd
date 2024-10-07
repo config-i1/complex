@@ -69,6 +69,6 @@ complex2vec(x)
 \code{\link[complex]{clm}}
 }
 \author{
-Ivan Svetunkov, \email{ivan@svetunkov.ru}
+Ivan Svetunkov, \email{ivan@svetunkov.com}
 }
 \keyword{univar}

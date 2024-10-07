@@ -46,6 +46,6 @@ cdescale(yScaled, y)
 \code{\link[base]{scale}}
 }
 \author{
-Ivan Svetunkov, \email{ivan@svetunkov.ru}
+Ivan Svetunkov, \email{ivan@svetunkov.com}
 }
 \keyword{univar}

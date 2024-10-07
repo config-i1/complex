@@ -139,7 +139,7 @@ plot(complexModel, 7)
 \code{\link[greybox]{alm}}
 }
 \author{
-Ivan Svetunkov, \email{ivan@svetunkov.ru}
+Ivan Svetunkov, \email{ivan@svetunkov.com}
 }
 \keyword{models}
 \keyword{nonlinear}

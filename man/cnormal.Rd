@@ -82,6 +82,6 @@ rcnorm(1000, 100+100i, 2, 1+1i)
 
 }
 \author{
-Ivan Svetunkov, \email{ivan@svetunkov.ru}
+Ivan Svetunkov, \email{ivan@svetunkov.com}
 }
 \keyword{distribution}

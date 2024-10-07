@@ -42,6 +42,6 @@ cexp(yLog)
 \code{\link[complex]{cscale}}
 }
 \author{
-Ivan Svetunkov, \email{ivan@svetunkov.ru}
+Ivan Svetunkov, \email{ivan@svetunkov.com}
 }
 \keyword{univar}

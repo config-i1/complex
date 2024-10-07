@@ -25,5 +25,5 @@ invert(matrix(complex(real=c(1,2), imaginary=c(1.1,2.1)), 2, 2))
 \link[base]{solve}
 }
 \author{
-Ivan Svetunkov, \email{ivan@svetunkov.ru}
+Ivan Svetunkov, \email{ivan@svetunkov.com}
 }

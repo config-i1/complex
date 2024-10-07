@@ -1,4 +1,12 @@
+complex v1.0.1 (Release data: 2024-10-07)
+==============
+
+Bugfixes:
+* Corrected the email address of the author.
+
+
 complex v1.0.0 (Release data: 2024-04-09)
+==============
 
 Changes:
 * Added pseudo- (or "direct") variance, covariance and correlation, cvar, ccov and ccor functions respectively.
