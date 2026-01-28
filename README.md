@@ -16,7 +16,7 @@ Stable version can be installed from CRAN:
 install.packages("complex")
 ```
 
-For installation from github use the remotes package:
+For installation from github use the `remotes` package:
 ```r
 if (!require("remotes")){install.packages("remotes")}
 remotes::install_github("config-i1/complex")
