@@ -9,6 +9,8 @@ output: html_document
 # Version
 This is the re-release of the package `complex`, v1.0.2
 
+This version also fixes the pipeline operator/R dependency issue.
+
 
 # Test environments
 * Local Ubuntu 25.10, R 4.5.1
