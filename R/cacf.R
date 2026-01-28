@@ -187,7 +187,7 @@ cpacf <- function(x, lag.max=NULL, method=c("direct","conjugate","pearson","kend
 #' @export
 print.cacf <- function(x, ...){
     cat("Complex Autocorrelations of series", x$series, "by lag\n\n");
-    x$acf |> setNames(x$lag) |> print();
+    print(setNames(x$acf, x$lag));
 }
 
 #' @param which Determines, which of the plots to produce. 1 is the plot of real
