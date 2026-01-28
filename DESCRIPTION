@@ -14,7 +14,7 @@ Description: Set of function implementing the instruments for complex-valued mod
              which is in press by Springer (expected to be published in 2024).
 License: LGPL-2.1
 Depends:
-    R (>= 3.5.0),
+    R (>= 4.1.0),
     greybox (>= 0.5.0),
     legion
 Imports:

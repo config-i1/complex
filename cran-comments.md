@@ -7,7 +7,7 @@ output: html_document
 
 
 # Version
-This is the initial release of the package `complex`, v1.0.2
+This is the re-release of the package `complex`, v1.0.2
 
 
 # Test environments
@@ -22,36 +22,13 @@ This is the initial release of the package `complex`, v1.0.2
 >0 errors | 0 warnings | 0 notes
 
 
-## Github actions
+## Github actions (including rhub v2)
 Successful checks for:
 
-- Windows latest release (2022 10.0.20348) with R 4.3.3
-- MacOS latest release (macOS 12.7.4) with R 4.3.3
-- Ubuntu 22.04.4 with R 4.3.3
+- Windows latest release with latest R
+- MacOS 15.7.3 with latest R
+- Ubuntu 24.04.3 LTS with latest R
 
-
-## win-builder
->Possibly misspelled words in DESCRIPTION:
->  Sergey (13:27)
->  Springer (14:35)
->  Svetunkov (13:17, 13:38)
-
-They are not misspelled.
-
-
-## R-hub
-### Windows Server 2022, R-devel, 64 bit
->* checking for non-standard things in the check directory ... NOTE
->Found the following files/directories:
->  ''NULL''
-
-This is absurd! There is no file/directory "NULL" in the project. This seems like an error on the server side.
-
->* checking for detritus in the temp directory ... NOTE
->Found the following files/directories:
->  'lastMiKTeXException'
-
-Once again, no such file or directory present in the package, probably an error on the server.
 
 # Downstream dependencies
 No reverse dependencies yet
