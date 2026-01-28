@@ -1,20 +1,17 @@
 ---
 title: "Cran Comments"
 author: "Ivan Svetunkov"
-date: "9 April 2024"
+date: "28 January 2026"
 output: html_document
 ---
 
-# Resubmission comment
-Fixed issues outlined by Konstanze Lauseker, including "dontrun" for a function and a monograph details in the "DESCRIPTION" file.
-
 
 # Version
-This is the initial release of the package `complex`, v1.0.0
+This is the initial release of the package `complex`, v1.0.2
 
 
 # Test environments
-* Local Ubuntu 23.10, R 4.3.1
+* Local Ubuntu 25.10, R 4.5.1
 * Github Actions
 * win-builder (devel and release)
 * rhub with rhub::check_for_cran() command
