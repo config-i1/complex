@@ -5,6 +5,10 @@ date: "28 January 2026"
 output: html_document
 ---
 
+# Update
+Fixed the description of the package.
+Added proper reference with the DOI.
+
 
 # Version
 This is the re-release of the package `complex`, v1.0.2
