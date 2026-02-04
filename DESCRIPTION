@@ -10,7 +10,7 @@ BugReports: https://github.com/config-i1/complex/issues
 Language: en-GB
 Description: Implements the instruments for complex-valued modelling,
              including time series analysis and forecasting. This is based on the monograph
-             by Svetunkov & Svetunkov (2024) <doi: 10.1007/978-3-031-62608-1>.
+             by Svetunkov & Svetunkov (2024) <doi:10.1007/978-3-031-62608-1>.
 License: LGPL-2.1
 Depends:
     R (>= 3.5.0),
